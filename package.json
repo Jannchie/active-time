@@ -1,0 +1,116 @@
+{
+  "name": "active-time",
+  "productName": "Active Time",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": ".webpack/main",
+  "scripts": {
+    "start": "electron-forge start",
+    "rebuild": "electron-rebuild -f -w .",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "keywords": [],
+  "author": {
+    "name": "Jannchie",
+    "email": "jannchie@gmail.com"
+  },
+  "license": "MIT",
+  "config": {
+    "forge": {
+      "externals": [
+        "uiohook-napi",
+        "electron-active-window"
+      ],
+      "packagerConfig": {
+        "externals": [
+          "uiohook-napi",
+          "electron-active-window"
+        ]
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "active-time"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ],
+      "plugins": [
+        [
+          "@electron-forge/plugin-webpack",
+          {
+            "mainConfig": "./webpack.main.config.js",
+            "renderer": {
+              "config": "./webpack.renderer.config.js",
+              "entryPoints": [
+                {
+                  "html": "./src/index.html",
+                  "js": "./src/renderer.js",
+                  "name": "main_window",
+                  "preload": {
+                    "js": "./src/preload.js"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      ]
+    }
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.5",
+    "@babel/preset-react": "^7.17.12",
+    "@electron-forge/cli": "^6.0.0-beta.64",
+    "@electron-forge/maker-deb": "^6.0.0-beta.64",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.64",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.64",
+    "@electron-forge/maker-zip": "^6.0.0-beta.64",
+    "@electron-forge/plugin-auto-unpack-natives": "^6.0.0-beta.64",
+    "@electron-forge/plugin-webpack": "6.0.0-beta.64",
+    "@vercel/webpack-asset-relocator-loader": "1.7.0",
+    "autoprefixer": "^10.4.7",
+    "babel-loader": "^8.2.5",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.0.0",
+    "electron": "19.0.4",
+    "electron-rebuild": "^3.2.7",
+    "node-loader": "^2.0.0",
+    "postcss": "^8.4.14",
+    "postcss-loader": "^7.0.0",
+    "style-loader": "^3.0.0",
+    "tailwindcss": "^3.1.3",
+    "webpack": "^5.73.0",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "dependencies": {
+    "@jannchie/active-window": "^1.0.0",
+    "@jannchie/uiohook-napi": "1.0.3",
+    "echarts": "^5.3.3",
+    "electron-active-window": "^0.0.6",
+    "electron-squirrel-startup": "^1.0.0",
+    "node-cron": "^3.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sequelize": "^6.21.0",
+    "sqlite3": "^5.0.8",
+    "web-vitals": "^2.1.4"
+  }
+}
