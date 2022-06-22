@@ -28,5 +28,7 @@ npm-debug.log.*
 *.sass.d.ts
 *.scss.d.ts
 
-# Test database
-data.db
+# eslint ignores hidden directories by default:
+# https://github.com/eslint/eslint/issues/8429
+!.erb
+*.ejs
