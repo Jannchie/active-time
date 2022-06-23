@@ -1,13 +1,13 @@
 import sqlite3 from 'sqlite3';
 import { app } from 'electron';
-import { Sequelize, Model, DataTypes } from 'sequelize';
+import { Sequelize, DataTypes, Optional, Op } from 'sequelize';
+import { MinuteRecord } from './MinuteRecord';
 
 const db = new Sequelize({
   dialect: 'sqlite',
   dialectModule: sqlite3,
   storage: `${app.getPath('userData')}/data.db`,
 });
-class MinuteRecord extends Model {}
 MinuteRecord.init(
   {
     program: DataTypes.STRING,
@@ -16,7 +16,27 @@ MinuteRecord.init(
     timestamp: DataTypes.DATE,
     seconds: DataTypes.INTEGER,
   },
-  { sequelize: db }
+  { sequelize: db, updatedAt: false }
 );
+class DB {
+  static async cleanData() {
+    await db.query('DROP TABLE IF EXISTS "MinuteRecords";');
+    await db.sync();
+  }
 
-export { db, MinuteRecord };
+  static async sync() {
+    return db.sync();
+  }
+
+  static async addMinuteRecord(record: Optional<any, string> | undefined) {
+    await MinuteRecord.create(record);
+  }
+
+  static async getMinuteRecords(duration: number) {
+    return MinuteRecord.findAll({
+      raw: true,
+      where: { timestamp: { [Op.gte]: new Date().getTime() - duration } },
+    });
+  }
+}
+export { DB, MinuteRecord };

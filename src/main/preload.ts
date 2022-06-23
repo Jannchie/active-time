@@ -1,10 +1,17 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'ipc-example' | 'toggle-record' | string;
+export type Channels =
+  | 'toggle-record'
+  | 'hide'
+  | 'quit'
+  | 'ready'
+  | 'get-db-file-size'
+  | 'clean-db-data'
+  | 'get-minutes-records';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
-    invoke(channel: Channels, args?: unknown[]) {
+    invoke(channel: Channels, args?: any) {
       return ipcRenderer.invoke(channel, args);
     },
     on(channel: Channels, func: (...args: unknown[]) => void) {

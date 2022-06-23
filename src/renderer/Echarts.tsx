@@ -6,6 +6,12 @@ import React, {
   useState,
 } from 'react';
 import { EChartsOption, ECharts, dispose, init } from 'echarts';
+import * as echarts from 'echarts/core';
+import dark from './themes/dark.project.json';
+import light from './themes/light.project.json';
+
+echarts.registerTheme('dark', dark);
+echarts.registerTheme('light', light);
 
 const UseSize = () => {
   const [size, setSize] = useState({
@@ -86,6 +92,7 @@ function EchartsComponent({
   React.useEffect(() => {
     if (chart.current) {
       chart.current.setOption(option ?? {});
+      chart.current.resize();
     }
   }, [option]);
   const darkLoadingStyle = {
@@ -125,11 +132,15 @@ function EchartsComponent({
     chart.current?.showLoading('default', theme);
   } else {
     chart.current?.hideLoading();
+    chart.current?.resize(size);
   }
 
   if (chart.current) {
     chart.current.resize({
-      width: typeof w === 'number' ? w : 'auto',
+      width:
+        typeof w === 'number'
+          ? Math.min(w, window.document.documentElement.clientWidth)
+          : 'auto',
       height: typeof h === 'number' ? h : 'auto',
     });
   }

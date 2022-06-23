@@ -15,10 +15,11 @@ import { app, BrowserWindow, Menu, Tray, ipcMain, shell } from 'electron';
 import os from 'os';
 import cron from 'node-cron';
 import { uIOhook } from '@jannchie/uiohook-napi';
+import activeWindows from 'electron-active-window';
+import fs from 'fs/promises';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-
-const activeWindows = require('electron-active-window');
+import { DB, MinuteRecord } from './db';
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -51,8 +52,6 @@ const settings = {
   language: 'en',
 };
 
-let secondData = new Map();
-
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -75,6 +74,16 @@ function setIpcHandle(win: BrowserWindow) {
   ipcMain.handle('ready', async () => {
     const systemInfo = getSystemInfo();
     return { systemInfo };
+  });
+  ipcMain.handle('get-minutes-records', async (_, duration: any) => {
+    return DB.getMinuteRecords(duration as number);
+  });
+  ipcMain.handle('get-db-file-size', async () => {
+    const p = `${app.getPath('userData')}/data.db`;
+    return (await fs.stat(p)).size;
+  });
+  ipcMain.handle('clean-db-data', async () => {
+    await DB.cleanData();
   });
   ipcMain.handle('hide', async () => {
     win.hide();
@@ -143,6 +152,7 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
+    minWidth: 600,
     icon: getAssetPath('icon.png'),
     titleBarStyle: 'hidden',
     webPreferences: {
@@ -198,26 +208,31 @@ app.on('window-all-closed', () => {
 
 async function start() {
   await app.whenReady();
+  await DB.sync();
   const win = await createWindow();
   win.webContents.openDevTools({ mode: 'undocked' });
-  const { db, MinuteRecord } = require('./db');
   setTray();
   function detectActive() {
+    let secondData = new Map();
     let event = new Map();
     cron.schedule('* * * * *', async (now) => {
       const curDatetime = new Date(
         now.getTime() - 1 * 60 * 1000 - (now.getTime() % (1000 * 60))
       );
       secondData.forEach(async (v, k) => {
-        const key = JSON.parse(k);
-        const record = await MinuteRecord.create({
-          program: key.program,
-          title: key.title,
-          event: key.event,
-          timestamp: curDatetime,
-          seconds: v,
-        });
-        console.log(record.toJSON());
+        try {
+          const key = JSON.parse(k);
+          const record = await MinuteRecord.create({
+            program: key.program,
+            title: key.title,
+            event: key.event,
+            timestamp: curDatetime,
+            seconds: v,
+          });
+          console.log(record.toJSON());
+        } catch (e) {
+          console.log(e);
+        }
       });
       secondData = new Map();
     });
@@ -262,7 +277,6 @@ async function start() {
     });
     uIOhook.start();
   }
-  await db.sync();
   setIpcHandle(win);
   detectActive();
 }

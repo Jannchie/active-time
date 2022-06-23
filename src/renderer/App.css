@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .j-btn {
+    @apply mr-2 rounded-md bg-zinc-500/20 hover:bg-zinc-500/40 transition cursor-pointer bg-opacity-20 px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75;
+  }
+  .j-btn-active {
+    @apply bg-zinc-500/60;
+  }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
