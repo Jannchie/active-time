@@ -110,7 +110,7 @@ function setTray() {
       },
     },
   ];
-  const iconPath = getAssetPath('logo.png');
+  const iconPath = getAssetPath('icon.png');
   const appTray = new Tray(iconPath);
   const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
   mainWindow?.show();
@@ -143,7 +143,7 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
-    icon: getAssetPath('logo.png'),
+    icon: getAssetPath('icon.png'),
     titleBarStyle: 'hidden',
     webPreferences: {
       preload: app.isPackaged
