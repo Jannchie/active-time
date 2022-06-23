@@ -14,7 +14,7 @@ import log from 'electron-log';
 import { app, BrowserWindow, Menu, Tray, ipcMain, shell } from 'electron';
 import os from 'os';
 import cron from 'node-cron';
-import { uIOhook } from '@jannchie/uiohook-napi';
+import { uIOhook } from 'uiohook-napi';
 import activeWindows from 'electron-active-window';
 import fs from 'fs/promises';
 import MenuBuilder from './menu';
@@ -119,7 +119,7 @@ function setTray() {
       },
     },
   ];
-  const iconPath = getAssetPath('icon.png');
+  const iconPath = getAssetPath('icons/16x16.png');
   const appTray = new Tray(iconPath);
   const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
   mainWindow?.show();
@@ -189,8 +189,12 @@ const createWindow = async () => {
   });
 
   // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
-  new AppUpdater();
+  try {
+    // eslint-disable-next-line
+    new AppUpdater();
+  } catch (e) {
+    console.log(e);
+  }
   return mainWindow;
 };
 
@@ -210,7 +214,6 @@ async function start() {
   await app.whenReady();
   await DB.sync();
   const win = await createWindow();
-  win.webContents.openDevTools({ mode: 'undocked' });
   setTray();
   function detectActive() {
     let secondData = new Map();
