@@ -17,6 +17,9 @@
   .j-btn-active {
     @apply bg-zinc-500/60;
   }
+  .j-body-color {
+    @apply dark:text-zinc-300 text-zinc-800 dark:bg-zinc-900 bg-zinc-100 dark:fill-slate-100;
+  }
 }
 
 body {

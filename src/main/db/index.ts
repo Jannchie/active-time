@@ -21,6 +21,7 @@ MinuteRecord.init(
 class DB {
   static async cleanData() {
     await db.query('DROP TABLE IF EXISTS "MinuteRecords";');
+    await db.query('VACUUM;');
     await db.sync();
   }
 
