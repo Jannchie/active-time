@@ -16,11 +16,20 @@ MinuteRecord.init(
     timestamp: DataTypes.DATE,
     seconds: DataTypes.INTEGER,
   },
-  { sequelize: db, updatedAt: false }
+  {
+    sequelize: db,
+    updatedAt: false,
+    indexes: [
+      {
+        fields: ['timestamp'],
+      },
+    ],
+  }
 );
 class DB {
   static async cleanData() {
     await db.query('DROP TABLE IF EXISTS "MinuteRecords";');
+    await db.query('VACUUM;');
     await db.sync();
   }
 

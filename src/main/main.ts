@@ -114,6 +114,12 @@ function setIpcHandle(win: BrowserWindow) {
 function setTray() {
   const trayMenuTemplate = [
     {
+      label: 'Show',
+      click: () => {
+        mainWindow?.show();
+      },
+    },
+    {
       label: 'Quit',
       click: () => {
         app.quit();
@@ -124,7 +130,7 @@ function setTray() {
   const appTray = new Tray(iconPath);
   const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
   mainWindow?.show();
-  appTray.setToolTip('never forget');
+  appTray.setToolTip('Active Time');
   appTray.setContextMenu(contextMenu);
   appTray.on('click', () => {
     mainWindow?.show();
