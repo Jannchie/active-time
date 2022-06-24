@@ -187,9 +187,7 @@
     "productName": "ActiveTime",
     "appId": "com.jannchie.ActiveTime",
     "asar": true,
-    "asarUnpack": [
-      "**\\*.{node,dll}"
-    ],
+    "asarUnpack": "**\\*.{node,dll}",
     "files": [
       "dist",
       "node_modules",

@@ -15,7 +15,7 @@ import { app, BrowserWindow, Menu, Tray, ipcMain, shell } from 'electron';
 import os from 'os';
 import cron from 'node-cron';
 import { uIOhook } from 'uiohook-napi';
-import activeWindows from 'electron-active-window';
+import activeWindows from '@jannchie/active-window';
 import fs from 'fs/promises';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -67,6 +67,7 @@ function getSystemInfo() {
     platform: os.platform(),
     memory: os.totalmem(),
     version: os.version(),
+    arch: os.arch(),
   };
 }
 

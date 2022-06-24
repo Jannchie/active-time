@@ -6,6 +6,16 @@ import Echarts from './Echarts';
 import './App.css';
 import { getPieOpitons, getMinutesHistory } from './options';
 
+// function MySwitch() {
+//   const [enabled, setEnabled] = useState(false);
+//   return (
+//     <Switch checked={enabled} onChange={setEnabled}>
+//       <span className="sr-only">Use setting</span>
+//       <span aria-hidden="true" />
+//     </Switch>
+//   );
+// }
+
 function MyModal({
   title = 'Button',
   info = 'Are you sure?',
@@ -191,6 +201,13 @@ function SettingsPage() {
             Follow System
           </button>
         </div>
+        {/* <div className="p-2 border rounded-lg border-zinc-500/20 mb-2">
+          <div className="text-sm text-zinc-500/80 py-1">Development Zone</div>
+          <div>
+            Debug: <MySwitch />
+          </div>
+        </div> */}
+
         <div className="p-2 border rounded-lg border-zinc-500/20 mb-2">
           <div className="text-sm text-zinc-500/80 py-1">Danger Zone</div>
           <MyModal
