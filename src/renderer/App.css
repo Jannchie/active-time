@@ -4,7 +4,15 @@
 
 @layer components {
   .j-btn {
-    @apply mr-2 rounded-md bg-zinc-500/20 hover:bg-zinc-500/40 transition cursor-pointer bg-opacity-20 px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75;
+    @apply rounded-md transition cursor-pointer bg-opacity-20 px-4 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75;
+  }
+  .j-danger-btn {
+    @apply bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 focus-visible:ring-red-600 text-red-500;
+    @apply j-btn;
+  }
+  .j-normal-btn {
+    @apply bg-zinc-500/20 hover:bg-zinc-500/40 border border-zinc-500/40 focus-visible:ring-zinc-600;
+    @apply j-btn;
   }
   .j-btn-active {
     @apply bg-zinc-500/60;

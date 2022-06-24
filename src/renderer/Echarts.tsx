@@ -1,46 +1,20 @@
-import React, {
-  HTMLAttributes,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { HTMLAttributes, useEffect, useRef, useState } from 'react';
 import { EChartsOption, ECharts, dispose, init } from 'echarts';
 import * as echarts from 'echarts/core';
 import dark from './themes/dark.project.json';
 import light from './themes/light.project.json';
+import { getLoadingTheme } from './getLoadingTheme';
+import { UseSize } from './UseSize';
 
 echarts.registerTheme('dark', dark);
 echarts.registerTheme('light', light);
 
-const UseSize = () => {
-  const [size, setSize] = useState({
-    width:
-      typeof window !== 'undefined'
-        ? window.document.documentElement.clientWidth
-        : 0,
-    height:
-      typeof window !== 'undefined'
-        ? window.document.documentElement.clientHeight
-        : 0,
-  });
-  const onResize = useCallback(() => {
-    setSize({
-      width: window.document.documentElement.clientWidth,
-      height: window.document.documentElement.clientHeight,
-    });
-  }, []);
-  useEffect(() => {
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  });
-  return size;
-};
 type StationChartProps = {
   height?: number | string | undefined;
   width?: number | string | undefined;
   style?: HTMLAttributes<HTMLDivElement>['style'];
   option?: EChartsOption;
+  theme?: 'dark' | 'light';
   loading?: boolean;
 };
 
@@ -49,6 +23,7 @@ function EchartsComponent({
   width,
   option,
   style,
+  theme,
   loading,
 }: StationChartProps): JSX.Element {
   const canvas = useRef<HTMLDivElement>(null);
@@ -56,16 +31,18 @@ function EchartsComponent({
   const [h, setH] = useState<string | number>(height ?? 400);
   const [w, setW] = useState<string | number>(width ?? 600);
   const size = UseSize();
+
   useEffect(() => {
     if (canvas.current !== null) {
       if (chart.current !== undefined) {
         dispose(chart.current);
       }
-      chart.current = init(canvas.current, 'dark', {
+      chart.current = init(canvas.current, theme, {
         renderer: 'canvas',
       });
     }
-  }, []);
+  }, [theme]);
+
   useEffect(() => {
     const handle = () => {
       const newH =
@@ -95,41 +72,9 @@ function EchartsComponent({
       chart.current.resize();
     }
   }, [option]);
-  const darkLoadingStyle = {
-    text: '载入中...',
-    textColor: '#FFF',
-    maskColor: 'rgb(24 24 27)',
-    zlevel: 0,
-    fontSize: 12,
-    showSpinner: true,
-    spinnerRadius: 10,
-    lineWidth: 5,
-    fontWeight: 'normal',
-    fontStyle: 'normal',
-    fontFamily: 'sans-serif',
-  };
-  const lightLoadingStyle = {
-    text: '载入中...',
-    maskColor: '#FFF',
-    textColor: 'rgb(24 24 27)',
-    zlevel: 0,
-    fontSize: 12,
-    showSpinner: true,
-    spinnerRadius: 10,
-    lineWidth: 5,
-    fontWeight: 'normal',
-    fontStyle: 'normal',
-    fontFamily: 'sans-serif',
-  };
-  let theme = lightLoadingStyle;
-  if (
-    window.matchMedia &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-  ) {
-    theme = darkLoadingStyle;
-  }
+
   if (loading) {
-    chart.current?.showLoading('default', theme);
+    chart.current?.showLoading('default', getLoadingTheme());
   } else {
     chart.current?.hideLoading();
     chart.current?.resize(size);
@@ -162,5 +107,6 @@ EchartsComponent.defaultProps = {
   style: {},
   option: {} as HTMLAttributes<HTMLDivElement>['style'],
   loading: false,
+  theme: 'light',
 };
 export default EchartsComponent;
