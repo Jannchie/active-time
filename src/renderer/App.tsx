@@ -11,6 +11,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import Echarts from './Echarts';
 import './App.css';
 import { getPieOpitons, getMinutesHistory } from './options';
+import packageInfo from '../../release/app/package.json';
 
 type GlobalData = {
   theme: 'system' | 'dark' | 'light';
@@ -21,6 +22,54 @@ const GlobalCtx = createContext<GlobalData>({
   theme: 'system',
   setTheme: () => {},
 });
+
+function LogoSVG() {
+  return (
+    <svg viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M87.6445 104.513H59.248L65.2676 87.3047H80.9707L57.7432 27.1748H85.9434L120.556 114H91.3086L87.6445 104.513ZM51.5273 114H23.5889L54.6025 31.1006L67.4268 65.582L51.5273 114Z"
+        fill="url(#paint0_linear_3_49)"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear_3_49"
+          x1="72.5"
+          y1="-9"
+          x2="72.5"
+          y2="159"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#466F9F" />
+          <stop offset="1" stopColor="#00DDFF" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function AboutPage() {
+  return (
+    <div className="flex w-full h-full items-center justify-center">
+      <div className="text-center">
+        <LogoSVG />
+        <p className="text-xl">Active Time</p>
+        <p className="text-sm">ver.{packageInfo.version}</p>
+        <p className="text-md">Made by Jianqi Pan</p>
+        <a
+          className="text-md hover:underline cursor-pointer text-blue-500"
+          href="https://github.com/Jannchie/active-time"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Github
+        </a>
+        <p className="text-sm text-zinc-500 mt-2">
+          Copyright © 2022 Jannchie Studio. All rights reserved.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function MyModal({
   title = 'Button',
@@ -272,31 +321,7 @@ function TitleBar() {
     >
       {systemInfo.platform !== 'darwin' && (
         <div className="w-16">
-          <div className="w-8 p-1">
-            <svg
-              viewBox="0 0 144 144"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M87.6445 104.513H59.248L65.2676 87.3047H80.9707L57.7432 27.1748H85.9434L120.556 114H91.3086L87.6445 104.513ZM51.5273 114H23.5889L54.6025 31.1006L67.4268 65.582L51.5273 114Z"
-                fill="url(#paint0_linear_3_49)"
-              />
-              <defs>
-                <linearGradient
-                  id="paint0_linear_3_49"
-                  x1="72.5"
-                  y1="-9"
-                  x2="72.5"
-                  y2="159"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop stopColor="#466F9F" />
-                  <stop offset="1" stopColor="#00DDFF" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+          <div className="w-8 p-1">{LogoSVG()}</div>
         </div>
       )}
       {systemInfo.platform !== 'darwin' && (
@@ -414,6 +439,8 @@ function App() {
         return <RecentPage />;
       case 1:
         return <SettingsPage />;
+      case 2:
+        return <AboutPage />;
       default:
         return <RecentPage />;
     }
@@ -425,20 +452,14 @@ function App() {
         <div className="flex overflow-hidden flex-grow">
           <div className="bg-zinc-500/10">
             <div className="flex flex-col children:rounded-lg gap-1 p-2 children:w-14 children:p-2 children:transition children:cursor-pointer">
-              <div
+              <button
+                type="button"
                 className={`hover:bg-zinc-500/40 ${
                   pageIdx === 0 ? 'bg-zinc-500/20' : ''
                 }`}
                 onClick={() => {
                   setPageIdx(0);
                 }}
-                tabIndex={-4}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    setPageIdx(0);
-                  }
-                }}
-                role="button"
               >
                 <svg
                   className="cursor-pointer"
@@ -447,21 +468,15 @@ function App() {
                 >
                   <path d="M24 35.65Q23.4 35.65 23 35.275Q22.6 34.9 22.6 34.3Q22.6 33.7 23 33.3Q23.4 32.9 23.95 32.9Q24.55 32.9 24.95 33.3Q25.35 33.7 25.35 34.3Q25.35 34.9 24.95 35.275Q24.55 35.65 24 35.65ZM24 39.4Q20.8 39.4 18 38.2Q15.2 37 13.1 34.9Q11 32.8 9.8 29.975Q8.6 27.15 8.6 24Q8.6 20.35 10.1 17.375Q11.6 14.4 14 12.25L25.75 24L24.95 24.8L13.95 13.8Q12.25 15.6 10.975 18.1Q9.7 20.6 9.7 24Q9.7 29.95 13.875 34.125Q18.05 38.3 24 38.3Q30 38.3 34.15 34.125Q38.3 29.95 38.3 24Q38.3 18.6 34.575 14.35Q30.85 10.1 24.45 9.65V14H23.35V8.6H23.95Q27.1 8.6 29.95 9.8Q32.8 11 34.9 13.075Q37 15.15 38.2 18Q39.4 20.85 39.4 24Q39.4 27.2 38.2 30Q37 32.8 34.9 34.9Q32.8 37 29.975 38.2Q27.15 39.4 24 39.4ZM34.3 25.35Q33.7 25.35 33.3 24.95Q32.9 24.55 32.9 23.95Q32.9 23.4 33.3 23Q33.7 22.6 34.3 22.6Q34.9 22.6 35.275 23Q35.65 23.4 35.65 23.95Q35.65 24.55 35.275 24.95Q34.9 25.35 34.3 25.35ZM13.7 25.35Q13.1 25.35 12.725 24.95Q12.35 24.55 12.35 24Q12.35 23.4 12.725 23Q13.1 22.6 13.7 22.6Q14.3 22.6 14.675 23Q15.05 23.4 15.05 23.95Q15.05 24.55 14.675 24.95Q14.3 25.35 13.7 25.35Z" />
                 </svg>
-              </div>
-              <div
+              </button>
+              <button
+                type="button"
                 className={`hover:bg-zinc-500/40 ${
                   pageIdx === 1 ? 'bg-zinc-500/20' : ''
                 }`}
                 onClick={() => {
                   setPageIdx(1);
                 }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    setPageIdx(1);
-                  }
-                }}
-                tabIndex={-5}
-                role="button"
               >
                 <svg
                   className="cursor-pointer"
@@ -470,7 +485,24 @@ function App() {
                 >
                   <path d="M21.1 41.4 20.35 35.85Q19.15 35.5 17.75 34.725Q16.35 33.95 15.4 33L10.35 35.3L7.4 30.05L11.9 26.75Q11.75 26.1 11.7 25.4Q11.65 24.7 11.65 24.05Q11.65 23.45 11.7 22.75Q11.75 22.05 11.85 21.25L7.4 17.8L10.35 12.7L15.4 14.9Q16.45 14.05 17.75 13.275Q19.05 12.5 20.3 12.15L21.1 6.6H27L27.75 12.2Q29.05 12.65 30.2 13.325Q31.35 14 32.45 14.9L37.8 12.7L40.7 17.8L36 21.35Q36.15 22.1 36.225 22.75Q36.3 23.4 36.3 24Q36.3 24.5 36.2 25.175Q36.1 25.85 35.95 26.7L40.6 30.05L37.65 35.3L32.45 32.95Q31.3 34 30.125 34.725Q28.95 35.45 27.75 35.8L27 41.4ZM23.85 28.25Q25.7 28.25 26.925 27.025Q28.15 25.8 28.15 24Q28.15 22.2 26.925 20.975Q25.7 19.75 23.9 19.75Q22.1 19.75 20.875 20.975Q19.65 22.2 19.65 24Q19.65 25.8 20.875 27.025Q22.1 28.25 23.85 28.25ZM23.9 27.15Q22.55 27.15 21.65 26.225Q20.75 25.3 20.75 24Q20.75 22.7 21.65 21.775Q22.55 20.85 23.9 20.85Q25.2 20.85 26.125 21.775Q27.05 22.7 27.05 24Q27.05 25.3 26.125 26.225Q25.2 27.15 23.9 27.15ZM24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95Q24.05 23.95 24.05 23.95ZM21.95 40.3H26L26.8 34.7Q28.3 34.3 29.5 33.625Q30.7 32.95 32.05 31.7L37.2 33.9L39.15 30.45L34.65 27.1Q34.85 26.15 34.975 25.425Q35.1 24.7 35.1 24Q35.1 23.15 34.975 22.475Q34.85 21.8 34.65 21L39.25 17.55L37.3 14.1L32.05 16.3Q31.1 15.3 29.55 14.35Q28 13.4 26.75 13.2L26.05 7.7H21.95L21.4 13.2Q19.75 13.5 18.475 14.225Q17.2 14.95 15.9 16.25L10.8 14.1L8.75 17.55L13.3 20.8Q13.05 21.5 12.95 22.325Q12.85 23.15 12.85 24Q12.85 24.85 12.925 25.6Q13 26.35 13.2 27.1L8.75 30.45L10.75 33.9L15.9 31.75Q17.05 33 18.35 33.7Q19.65 34.4 21.3 34.8Z" />
                 </svg>
-              </div>
+              </button>
+              <button
+                type="button"
+                className={`hover:bg-zinc-500/40 ${
+                  pageIdx === 2 ? 'bg-zinc-500/20' : ''
+                }`}
+                onClick={() => {
+                  setPageIdx(2);
+                }}
+              >
+                <svg
+                  className="cursor-pointer"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 48 48"
+                >
+                  <path d="M23.5 32.7H24.6V22H23.5ZM24 19.6Q24.4 19.6 24.65 19.375Q24.9 19.15 24.9 18.7Q24.9 18.25 24.65 18.025Q24.4 17.8 24 17.8Q23.55 17.8 23.325 18.025Q23.1 18.25 23.1 18.7Q23.1 19.1 23.35 19.35Q23.6 19.6 24 19.6ZM24 41.4Q20.35 41.4 17.175 40.05Q14 38.7 11.675 36.325Q9.35 33.95 7.975 30.8Q6.6 27.65 6.6 24Q6.6 20.35 7.95 17.175Q9.3 14 11.675 11.65Q14.05 9.3 17.2 7.95Q20.35 6.6 24 6.6Q27.65 6.6 30.825 7.95Q34 9.3 36.35 11.65Q38.7 14 40.05 17.175Q41.4 20.35 41.4 24Q41.4 27.65 40.05 30.825Q38.7 34 36.35 36.325Q34 38.65 30.825 40.025Q27.65 41.4 24 41.4ZM24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24ZM24 40.3Q30.75 40.3 35.525 35.525Q40.3 30.75 40.3 24Q40.3 17.25 35.525 12.475Q30.75 7.7 24 7.7Q17.25 7.7 12.475 12.475Q7.7 17.25 7.7 24Q7.7 30.75 12.475 35.525Q17.25 40.3 24 40.3Z" />
+                </svg>
+              </button>
             </div>
           </div>
           <div className="flex-grow overflow-x-hidden">
