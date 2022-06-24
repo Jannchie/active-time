@@ -16,7 +16,15 @@ MinuteRecord.init(
     timestamp: DataTypes.DATE,
     seconds: DataTypes.INTEGER,
   },
-  { sequelize: db, updatedAt: false }
+  {
+    sequelize: db,
+    updatedAt: false,
+    indexes: [
+      {
+        fields: ['timestamp'],
+      },
+    ],
+  }
 );
 class DB {
   static async cleanData() {
