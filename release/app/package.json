@@ -16,7 +16,7 @@
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {
-    "electron-active-window": "^0.0.6",
+    "@jannchie/active-window": "^1.0.1",
     "sequelize": "^6.21.0",
     "sqlite3": "^5.0.8",
     "uiohook-napi": "^1.2.0"
