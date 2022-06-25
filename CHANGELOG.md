@@ -1,5 +1,15 @@
 # Change log
 
+## [0.1.3 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.3)
+
+**What's Changed**
+
+- New window control logic is used:
+  - On the Mac, clicking the Close window button will only hide the window.
+  - The exit button in the tray will actually exit the program.
+- Beautify the style.
+- Fixed icon size issues.
+
 ## [0.1.2 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.2)
 
 **What's Changed**

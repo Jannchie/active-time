@@ -323,7 +323,7 @@ function TitleBar() {
   }, []);
   return (
     <div
-      className="flex justify-between items-center dark:bg-zinc-800 z-10 bg-zinc-100 w-full h-7"
+      className="flex justify-between items-center dark:bg-zinc-800 z-10 bg-zinc-100 w-full h-7 border-b border-zinc-500/20"
       style={{ WebkitAppRegion: 'drag' } as any}
     >
       {systemInfo.platform !== 'darwin' && (
@@ -517,7 +517,7 @@ function App() {
           </div>
         </div>
 
-        <div className="z-20 dark:bg-zinc-800 bottom-0 w-full flex font-mono text-sm">
+        <div className="z-20 dark:bg-zinc-800 bottom-0 w-full flex font-mono text-sm border-t border-zinc-500/20">
           <RecordingLabel />
           <StorageLabel />
         </div>
