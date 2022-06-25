@@ -11,11 +11,11 @@
     @apply j-btn;
   }
   .j-normal-btn {
-    @apply bg-zinc-500/20 hover:bg-zinc-500/40 border border-zinc-500/40 focus-visible:ring-zinc-600;
+    @apply dark:bg-zinc-500/20 bg-zinc-100 dark:hover:bg-zinc-500/40 hover:bg-zinc-200 border border-zinc-500/40 focus-visible:ring-zinc-600;
     @apply j-btn;
   }
   .j-btn-active {
-    @apply bg-zinc-500/60;
+    @apply dark:bg-zinc-500/60 bg-zinc-300;
   }
   .j-body-color {
     @apply dark:text-zinc-300 text-zinc-800 dark:bg-zinc-900 bg-zinc-100 dark:fill-slate-100;
