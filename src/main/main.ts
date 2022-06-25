@@ -21,6 +21,10 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { DB, MinuteRecord } from './db';
 
+const data = {
+  closeable: false,
+};
+
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
@@ -60,8 +64,6 @@ export default class AppUpdater {
   }
 }
 
-let mainWindow: BrowserWindow | null = null;
-
 function getSystemInfo() {
   return {
     platform: os.platform(),
@@ -72,6 +74,7 @@ function getSystemInfo() {
 }
 
 function setIpcHandle(win: BrowserWindow) {
+  ipcMain.removeAllListeners();
   ipcMain.handle('ready', async () => {
     const systemInfo = getSystemInfo();
     return { systemInfo };
@@ -87,9 +90,11 @@ function setIpcHandle(win: BrowserWindow) {
     await DB.cleanData();
   });
   ipcMain.handle('hide', async () => {
-    win.hide();
+    data.closeable = true;
+    win.minimize();
   });
   ipcMain.handle('quit', async () => {
+    data.closeable = true;
     app.quit();
   });
   ipcMain.handle('toggle-record', (_, val) => {
@@ -111,33 +116,6 @@ function setIpcHandle(win: BrowserWindow) {
   });
 }
 
-function setTray() {
-  const trayMenuTemplate = [
-    {
-      label: 'Show',
-      click: () => {
-        mainWindow?.show();
-      },
-    },
-    {
-      label: 'Quit',
-      click: () => {
-        app.quit();
-      },
-    },
-  ];
-  const iconPath = getAssetPath('icons/16x16.png');
-  const appTray = new Tray(iconPath);
-  const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
-  mainWindow?.show();
-  appTray.setToolTip('Active Time');
-  appTray.setContextMenu(contextMenu);
-  appTray.on('click', () => {
-    mainWindow?.show();
-  });
-  return appTray;
-}
-
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
@@ -155,7 +133,7 @@ const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
-  mainWindow = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
     height: 728,
@@ -182,10 +160,13 @@ const createWindow = async () => {
     }
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  mainWindow.on('close', (e: Electron.Event) => {
+    if (!data.closeable) {
+      mainWindow.hide();
+      app.dock.hide();
+      e.preventDefault();
+    }
   });
-
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
 
@@ -194,7 +175,10 @@ const createWindow = async () => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
-
+  mainWindow.on('closed', () => {});
+  mainWindow.on('minimize', () => {
+    data.closeable = true;
+  });
   // Remove this if your app does not use auto updates
   try {
     // eslint-disable-next-line
@@ -205,89 +189,109 @@ const createWindow = async () => {
   return mainWindow;
 };
 
-/**
- * Add event listeners...
- */
-
-app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+function setTray(win: BrowserWindow) {
+  const trayMenuTemplate = [
+    {
+      label: 'Show',
+      click: () => {
+        data.closeable = false;
+        win.show();
+        app.dock.show();
+      },
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        data.closeable = true;
+        app.dock.hide();
+        win.hide();
+      },
+    },
+    {
+      label: 'Exit',
+      click: () => {
+        win?.close();
+        data.closeable = true;
+        app.quit();
+      },
+    },
+  ];
+  const iconPath = getAssetPath('icons/16x16.png');
+  const appTray = new Tray(iconPath);
+  const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
+  appTray.setToolTip('Active Time');
+  appTray.setContextMenu(contextMenu);
+  return appTray;
+}
 
 async function start() {
   await app.whenReady();
   await DB.sync();
   const win = await createWindow();
-  setTray();
-  function detectActive() {
-    let secondData = new Map();
-    let event = new Map();
-    cron.schedule('* * * * *', async (now) => {
-      const curDatetime = new Date(
-        now.getTime() - 1 * 60 * 1000 - (now.getTime() % (1000 * 60))
-      );
-      secondData.forEach(async (v, k) => {
-        try {
-          const key = JSON.parse(k);
-          const record = await MinuteRecord.create({
-            program: key.program,
-            title: key.title,
-            event: key.event,
-            timestamp: curDatetime,
-            seconds: v,
-          });
-          console.log(record.toJSON());
-        } catch (e) {
-          console.log(e);
-        }
-      });
-      secondData = new Map();
-    });
+  setTray(win);
+  setIpcHandle(win);
+}
 
-    setInterval(async () => {
+function detectActive() {
+  let secondData = new Map();
+  let event = new Map();
+  cron.schedule('* * * * *', async (now) => {
+    const curDatetime = new Date(
+      now.getTime() - 1 * 60 * 1000 - (now.getTime() % (1000 * 60))
+    );
+    secondData.forEach(async (v, k) => {
       try {
-        if (event.size > 0) {
-          const activeWindowsInfo = await activeWindows().getActiveWindow();
-          const eventType =
-            (event.get('type') ?? 0) > settings.checkInterval ? 'type' : 'read';
-          const keyObj = {
-            program: activeWindowsInfo.windowClass,
-            title: activeWindowsInfo.windowName,
-            event: eventType,
-          };
-          const key = JSON.stringify(keyObj);
-          secondData.set(
-            key,
-            (secondData.get(key) ?? 0) + settings.checkInterval
-          );
-          win.webContents.send('active-event', {
-            event,
-            activeWindowsInfo,
-          });
-          event = new Map();
-        }
+        const key = JSON.parse(k);
+        const record = await MinuteRecord.create({
+          program: key.program,
+          title: key.title,
+          event: key.event,
+          timestamp: curDatetime,
+          seconds: v,
+        });
+        console.log(record.toJSON());
       } catch (e) {
         console.log(e);
       }
-    }, 1000 * settings.checkInterval);
-    uIOhook.on('keydown', () => {
-      event.set('type', (event.get('type') ?? 0) + 1);
     });
-    uIOhook.on('mousedown', () => {
-      event.set('read', (event.get('read') ?? 0) + 1);
-    });
-    uIOhook.on('mousemove', () => {
-      event.set('read', (event.get('read') ?? 0) + 1);
-    });
-    uIOhook.on('wheel', () => {
-      event.set('read', (event.get('read') ?? 0) + 1);
-    });
-    uIOhook.start();
-  }
-  setIpcHandle(win);
-  detectActive();
+    secondData = new Map();
+  });
+  setInterval(async () => {
+    try {
+      if (event.size > 0) {
+        const activeWindowsInfo = await activeWindows().getActiveWindow();
+        const eventType =
+          (event.get('type') ?? 0) > settings.checkInterval ? 'type' : 'read';
+        const keyObj = {
+          program: activeWindowsInfo.windowClass,
+          title: activeWindowsInfo.windowName,
+          event: eventType,
+        };
+        const key = JSON.stringify(keyObj);
+        secondData.set(
+          key,
+          (secondData.get(key) ?? 0) + settings.checkInterval
+        );
+
+        event = new Map();
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }, 1000 * settings.checkInterval);
+  uIOhook.on('keydown', () => {
+    event.set('type', (event.get('type') ?? 0) + 1);
+  });
+  uIOhook.on('mousedown', () => {
+    event.set('read', (event.get('read') ?? 0) + 1);
+  });
+  uIOhook.on('mousemove', () => {
+    event.set('read', (event.get('read') ?? 0) + 1);
+  });
+  uIOhook.on('wheel', () => {
+    event.set('read', (event.get('read') ?? 0) + 1);
+  });
+  uIOhook.start();
 }
+detectActive();
 start().catch(console.log);
