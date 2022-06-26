@@ -1,5 +1,12 @@
 # Change log
 
+## [0.1.3 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.4)
+
+**What's Changed**
+
+- Beautify tray icons on MacOS.
+- Fix the bug of icon not display on macOS.
+
 ## [0.1.3 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.3)
 
 **What's Changed**
