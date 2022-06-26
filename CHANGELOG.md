@@ -1,6 +1,12 @@
 # Change log
 
-## [0.1.3 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.4)
+## [0.1.5 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.5)
+
+**What's Changed**
+
+- Fixed exit & minimize behavior on Windows
+
+## [0.1.4 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.4)
 
 **What's Changed**
 
