@@ -344,7 +344,7 @@ function TitleBar() {
             className="hover:bg-zinc-500 transition"
             style={{ WebkitAppRegion: 'no-drag' } as any}
             onClick={() => {
-              return window.electron.ipcRenderer.invoke('hide');
+              return window.electron.ipcRenderer.invoke('minimize');
             }}
             onKeyDown={() => {}}
           >
@@ -361,7 +361,7 @@ function TitleBar() {
             tabIndex={-1}
             className="hover:bg-red-500 transition"
             style={{ WebkitAppRegion: 'no-drag' } as any}
-            onClick={() => window.electron.ipcRenderer.invoke('quit')}
+            onClick={() => window.electron.ipcRenderer.invoke('hide')}
             onKeyDown={() => {}}
           >
             <svg

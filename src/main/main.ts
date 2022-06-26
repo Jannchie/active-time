@@ -25,6 +25,23 @@ const data = {
   closeable: false,
 };
 
+function show(win: BrowserWindow) {
+  data.closeable = false;
+  win.show();
+  app.dock?.show();
+}
+
+function hide(mainWindow: BrowserWindow) {
+  mainWindow.hide();
+  app.dock?.hide();
+}
+
+function exit(win: BrowserWindow) {
+  win?.close();
+  data.closeable = true;
+  app.quit();
+}
+
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
@@ -90,7 +107,9 @@ function setIpcHandle(win: BrowserWindow) {
     await DB.cleanData();
   });
   ipcMain.handle('hide', async () => {
-    data.closeable = true;
+    hide(win);
+  });
+  ipcMain.handle('minimize', async () => {
     win.minimize();
   });
   ipcMain.handle('quit', async () => {
@@ -162,8 +181,7 @@ const createWindow = async () => {
 
   mainWindow.on('close', (e: Electron.Event) => {
     if (!data.closeable) {
-      mainWindow.hide();
-      app.dock.hide();
+      hide(mainWindow);
       e.preventDefault();
     }
   });
@@ -194,28 +212,24 @@ function setTray(win: BrowserWindow) {
     {
       label: 'Show',
       click: () => {
-        data.closeable = false;
-        win.show();
-        app.dock.show();
+        show(win);
       },
     },
     {
       label: 'Hide',
       click: () => {
-        data.closeable = true;
-        app.dock.hide();
-        win.hide();
+        hide(win);
       },
     },
     {
       label: 'Exit',
       click: () => {
-        win?.close();
-        data.closeable = true;
-        app.quit();
+        exit(win);
       },
     },
   ];
+
+  // If the platform is OSX, we need to use template icons.
   const iconPath = getAssetPath(
     os.platform() === 'darwin' ? 'TrayTemplate.png' : 'Tray.png'
   );
@@ -223,6 +237,14 @@ function setTray(win: BrowserWindow) {
   const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
   appTray.setToolTip('Active Time');
   appTray.setContextMenu(contextMenu);
+
+  // In darwin, the click event will pop up the context menu rather than show the window.
+  if (process.platform !== 'darwin') {
+    appTray.on('click', () => {
+      show(win);
+    });
+  }
+
   return appTray;
 }
 

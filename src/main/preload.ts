@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 export type Channels =
   | 'toggle-record'
   | 'hide'
+  | 'minimize'
   | 'quit'
   | 'ready'
   | 'get-db-file-size'
