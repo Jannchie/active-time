@@ -216,7 +216,9 @@ function setTray(win: BrowserWindow) {
       },
     },
   ];
-  const iconPath = getAssetPath('icons/16x16.png');
+  const iconPath = getAssetPath(
+    os.platform() === 'darwin' ? 'TrayTemplate.png' : 'Tray.png'
+  );
   const appTray = new Tray(iconPath);
   const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
   appTray.setToolTip('Active Time');
