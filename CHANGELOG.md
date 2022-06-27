@@ -1,5 +1,14 @@
 # Change log
 
+## [0.2.0 - Collect Hourly & Daily Data](https://github.com/Jannchie/active-time/releases/tag/v0.1.5)
+
+**What's Changed**
+
+- Enable counting data by the hour and by the day.
+- Added a new chart for statistics on the most commonly used applications in a period of time.
+- Optimized animation and update effects for charts.
+- Modified layout
+
 ## [0.1.5 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.1.5)
 
 **What's Changed**

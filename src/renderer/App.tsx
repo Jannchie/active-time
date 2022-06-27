@@ -8,9 +8,10 @@ import {
 } from 'react';
 import { useRequest } from 'ahooks';
 import { Dialog, Transition } from '@headlessui/react';
+import { Result } from 'ahooks/lib/useRequest/src/types';
 import Echarts from './Echarts';
 import './App.css';
-import { getPieOpitons, getMinutesHistory } from './options';
+import { getPieOptions, getHistoryStackBarOptions } from './options';
 import packageInfo from '../../release/app/package.json';
 
 type GlobalData = {
@@ -181,49 +182,112 @@ function formatFileSzie(size: number) {
   return `${(size / 1024 / 1024 / 1024).toFixed(2)}GB`;
 }
 
-function RecentPage() {
-  const minutesRecordsResp = useRequest(
-    async () =>
-      window.electron.ipcRenderer.invoke(
-        'get-minutes-records',
-        60 * 60 * 1000 * 1
-      ),
-    { pollingInterval: 60 * 1000 }
-  );
-  const { theme } = useContext(GlobalCtx);
-  let trueSystem: 'dark' | 'light';
-  if (theme === 'system') {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      trueSystem = 'dark';
-    } else {
-      trueSystem = 'light';
-    }
-  } else {
-    trueSystem = theme;
-  }
+function ChartsView({
+  recordsResp,
+  theme,
+}: {
+  recordsResp: Result<any, []>;
+  theme: 'light' | 'dark';
+}) {
   return (
     <>
-      {minutesRecordsResp.data && minutesRecordsResp.data.length > 0 ? (
-        <>
-          <div>
-            <Echarts
-              option={getPieOpitons(minutesRecordsResp.data, 'event')}
-              height={300}
-              width="100%"
-              theme={trueSystem}
-              loading={minutesRecordsResp.loading}
-            />
-          </div>
-          <div>
-            <Echarts
-              option={getMinutesHistory(minutesRecordsResp.data)}
-              height={300}
-              width="100%"
-              theme={trueSystem}
-              loading={minutesRecordsResp.loading}
-            />
-          </div>
-        </>
+      <div className="flex">
+        <Echarts
+          option={getPieOptions(recordsResp.data, 'event')}
+          height={300}
+          width="100%"
+          theme={theme}
+          loading={recordsResp.loading}
+        />
+        <Echarts
+          option={getPieOptions(recordsResp.data, 'program', 5)}
+          height={300}
+          width="100%"
+          theme={theme}
+          loading={recordsResp.loading}
+        />
+      </div>
+      <div>
+        <Echarts
+          option={getHistoryStackBarOptions(recordsResp.data)}
+          height={300}
+          width="100%"
+          theme={theme}
+          loading={recordsResp.loading}
+        />
+      </div>
+    </>
+  );
+}
+function RecentPage() {
+  function getChannel(selecting: number) {
+    switch (selecting) {
+      case 1:
+        return 'get-hours-records';
+      case 2:
+        return 'get-days-records';
+      default:
+        return 'get-minutes-records';
+    }
+  }
+  function getDuration(selecting: number) {
+    switch (selecting) {
+      case 1:
+        return 60 * 60 * 72 * 1000;
+      case 2:
+        return 60 * 60 * 24 * 1000 * 90;
+      default:
+        return 60 * 60 * 1000 * 1;
+    }
+  }
+  const [selecting, setSelecting] = useState(0);
+  const recordsResp = useRequest(
+    async () =>
+      window.electron.ipcRenderer.invoke(
+        getChannel(selecting),
+        getDuration(selecting)
+      ),
+    { pollingInterval: 5 * 1000, refreshDeps: [selecting] }
+  );
+  const { theme } = useContext(GlobalCtx);
+  let trueTheme: 'dark' | 'light';
+  if (theme === 'system') {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      trueTheme = 'dark';
+    } else {
+      trueTheme = 'light';
+    }
+  } else {
+    trueTheme = theme;
+  }
+  const groupData = [
+    {
+      name: 'Minutely',
+    },
+    {
+      name: 'Hourly',
+    },
+    {
+      name: 'Daily',
+    },
+  ];
+  const groupItems = groupData.map((item, index) => {
+    return (
+      <button
+        type="button"
+        key={item.name}
+        className={`${selecting === index && 'bg-zinc-500/20'}`}
+        onClick={() => setSelecting(index)}
+      >
+        {item.name}
+      </button>
+    );
+  });
+  return (
+    <>
+      <div className="j-btn-group">{groupItems}</div>
+      {recordsResp.data && recordsResp.data.length > 0 ? (
+        <ChartsView recordsResp={recordsResp} theme={trueTheme} />
       ) : (
         <div className="inset-0 w-full h-full flex text-center align-middle justify-center items-center">
           <div>Collecting data. This will take up to 1 minute.</div>
@@ -337,19 +401,21 @@ function TitleBar() {
         </div>
       )}
       {systemInfo.platform !== 'darwin' && (
-        <div className="flex children:px-3 children:py-1">
+        <div
+          className="flex children:px-3 children:py-1"
+          style={{ WebkitAppRegion: 'no-drag' } as any}
+        >
           <div
             role="button"
             tabIndex={0}
-            className="hover:bg-zinc-500 transition"
-            style={{ WebkitAppRegion: 'no-drag' } as any}
+            className="hover:bg-zinc-500 transition cursor-default"
             onClick={() => {
               return window.electron.ipcRenderer.invoke('minimize');
             }}
             onKeyDown={() => {}}
           >
             <svg
-              className="h-6 w-6 cursor-pointer"
+              className="h-6 w-6"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 48 48"
             >
@@ -359,13 +425,12 @@ function TitleBar() {
           <div
             role="button"
             tabIndex={-1}
-            className="hover:bg-red-500 transition"
-            style={{ WebkitAppRegion: 'no-drag' } as any}
+            className="hover:bg-red-500 transition cursor-default self-end"
             onClick={() => window.electron.ipcRenderer.invoke('hide')}
             onKeyDown={() => {}}
           >
             <svg
-              className="h-6 w-6 cursor-pointer"
+              className="h-6 w-6"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 48 48"
             >
@@ -387,9 +452,9 @@ function RecordingLabel() {
     });
   }, []);
   return (
-    <div
+    <button
       tabIndex={-2}
-      role="button"
+      type="button"
       className={`${
         recording
           ? 'bg-green-800 hover:bg-green-700'
@@ -407,7 +472,7 @@ function RecordingLabel() {
       }}
     >
       ● {recording ? 'RECORDING' : 'STOPPED'}
-    </div>
+    </button>
   );
 }
 
@@ -440,7 +505,7 @@ function App() {
     document.body.classList.remove('dark');
   }
 
-  function Page({ p }: any) {
+  function MainPages({ p }: any) {
     switch (p) {
       case 0:
         return <RecentPage />;
@@ -458,7 +523,7 @@ function App() {
         <TitleBar />
         <div className="flex overflow-hidden flex-grow">
           <div className="bg-zinc-500/10">
-            <div className="flex flex-col children:rounded-lg gap-1 p-2 children:w-14 children:p-2 children:transition children:cursor-pointer">
+            <div className="flex flex-col h-full children:rounded-lg gap-1 p-2 children:w-14 children:p-2 children:transition children:cursor-pointer">
               <button
                 type="button"
                 className={`hover:bg-zinc-500/40 ${
@@ -469,13 +534,14 @@ function App() {
                 }}
               >
                 <svg
-                  className="cursor-pointer"
+                  className="cursor-pointer children:cursor-pointer"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 48 48"
                 >
                   <path d="M24 35.65Q23.4 35.65 23 35.275Q22.6 34.9 22.6 34.3Q22.6 33.7 23 33.3Q23.4 32.9 23.95 32.9Q24.55 32.9 24.95 33.3Q25.35 33.7 25.35 34.3Q25.35 34.9 24.95 35.275Q24.55 35.65 24 35.65ZM24 39.4Q20.8 39.4 18 38.2Q15.2 37 13.1 34.9Q11 32.8 9.8 29.975Q8.6 27.15 8.6 24Q8.6 20.35 10.1 17.375Q11.6 14.4 14 12.25L25.75 24L24.95 24.8L13.95 13.8Q12.25 15.6 10.975 18.1Q9.7 20.6 9.7 24Q9.7 29.95 13.875 34.125Q18.05 38.3 24 38.3Q30 38.3 34.15 34.125Q38.3 29.95 38.3 24Q38.3 18.6 34.575 14.35Q30.85 10.1 24.45 9.65V14H23.35V8.6H23.95Q27.1 8.6 29.95 9.8Q32.8 11 34.9 13.075Q37 15.15 38.2 18Q39.4 20.85 39.4 24Q39.4 27.2 38.2 30Q37 32.8 34.9 34.9Q32.8 37 29.975 38.2Q27.15 39.4 24 39.4ZM34.3 25.35Q33.7 25.35 33.3 24.95Q32.9 24.55 32.9 23.95Q32.9 23.4 33.3 23Q33.7 22.6 34.3 22.6Q34.9 22.6 35.275 23Q35.65 23.4 35.65 23.95Q35.65 24.55 35.275 24.95Q34.9 25.35 34.3 25.35ZM13.7 25.35Q13.1 25.35 12.725 24.95Q12.35 24.55 12.35 24Q12.35 23.4 12.725 23Q13.1 22.6 13.7 22.6Q14.3 22.6 14.675 23Q15.05 23.4 15.05 23.95Q15.05 24.55 14.675 24.95Q14.3 25.35 13.7 25.35Z" />
                 </svg>
               </button>
+              <div className="flex-grow" />
               <button
                 type="button"
                 className={`hover:bg-zinc-500/40 ${
@@ -486,7 +552,7 @@ function App() {
                 }}
               >
                 <svg
-                  className="cursor-pointer"
+                  className="cursor-pointer children:cursor-pointer"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 48 48"
                 >
@@ -503,7 +569,7 @@ function App() {
                 }}
               >
                 <svg
-                  className="cursor-pointer"
+                  className="cursor-pointer children:cursor-pointer"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 48 48"
                 >
@@ -513,7 +579,7 @@ function App() {
             </div>
           </div>
           <div className="flex-grow overflow-x-hidden">
-            <Page p={pageIdx} />
+            <MainPages p={pageIdx} />
           </div>
         </div>
 

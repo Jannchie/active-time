@@ -5,7 +5,7 @@ import path from 'path';
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
 if (process.env.NODE_ENV === 'development') {
-  const port = process.env.PORT || 1212;
+  const port = process.env.PORT || 25123;
   resolveHtmlPath = (htmlFileName: string) => {
     const url = new URL(`http://localhost:${port}`);
     url.pathname = htmlFileName;
@@ -15,4 +15,24 @@ if (process.env.NODE_ENV === 'development') {
   resolveHtmlPath = (htmlFileName: string) => {
     return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
   };
+}
+
+export function getCurMinute(now: Date) {
+  return new Date(
+    now.getTime() - 1 * 60 * 1000 - (now.getTime() % (1000 * 60))
+  );
+}
+
+export function getCurHour(now: Date) {
+  return new Date(
+    now.getTime() - 1 * 60 * 60 * 1000 - (now.getTime() % (1000 * 60 * 60))
+  );
+}
+
+export function getCurDay(now: Date) {
+  return new Date(
+    now.getTime() -
+      1 * 24 * 60 * 60 * 1000 -
+      (now.getTime() % (1000 * 60 * 60 * 24))
+  );
 }
