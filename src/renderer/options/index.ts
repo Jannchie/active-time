@@ -79,7 +79,7 @@ export const getHistoryStackBarOptions = (
         stack: 'total',
         data: d,
         showBackground: true,
-        animationDelay: (idx: number) => idx * 10 + 200 * i,
+        animationDelay: (idx: number) => idx * 5 + 150 * i,
       } as any;
     });
     const result: echarts.EChartsOption = {
