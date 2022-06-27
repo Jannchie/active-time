@@ -296,16 +296,16 @@ function detectActive() {
         const program = activeWindowsInfo.windowClass;
         const title = activeWindowsInfo.windowName;
         const seconds = settings.checkInterval;
-        [DailyRecord, MinuteRecord, HourlyRecord].map(async (recordModel) => {
+        [DailyRecord, MinuteRecord, HourlyRecord].map(async (_, i) => {
           let curTime;
-          switch (recordModel.name) {
-            case 'MinuteRecord':
+          switch (i) {
+            case 1:
               curTime = getCurMinute(now);
               break;
-            case 'HourlyRecord':
+            case 2:
               curTime = getCurHour(now);
               break;
-            case 'DailyRecord':
+            case 0:
               curTime = getCurDay(now);
               break;
             default:
@@ -320,9 +320,25 @@ function detectActive() {
             },
           };
           try {
-            const [record, created] = await recordModel.findOrCreate(
-              searchOptions
-            );
+            let record: any;
+            let created: boolean;
+            switch (i) {
+              case 0:
+                [record, created] = await DailyRecord.findOrCreate(
+                  searchOptions
+                );
+                break;
+              case 1:
+                [record, created] = await MinuteRecord.findOrCreate(
+                  searchOptions
+                );
+                break;
+              default:
+                [record, created] = await HourlyRecord.findOrCreate(
+                  searchOptions
+                );
+                break;
+            }
             if (created) {
               record.set('event', eventType);
               record.set('seconds', seconds);
