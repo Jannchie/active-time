@@ -3,18 +3,17 @@ import { app } from 'electron';
 import { Sequelize, DataTypes, Optional, Op, Transaction } from 'sequelize';
 import { DailyRecord, HourlyRecord, MinuteRecord } from './Records';
 
-// eslint-disable-next-line no-console
-console.log(`connect to ${app.getPath('userData')}/data.db`);
 const db = new Sequelize({
   dialect: 'sqlite',
   dialectModule: sqlite3,
   storage: `${app.getPath('userData')}/data.db`,
   transactionType: Transaction.TYPES.IMMEDIATE,
-  logging: false,
+  logging: true,
 });
 
 function initModels() {
   const models = [DailyRecord, HourlyRecord, MinuteRecord];
+  const nameTable = ['daily_records', 'hourly_records', 'minute_records'];
   for (let i = 0; i < models.length; i += 1) {
     models[i].init(
       {
@@ -32,6 +31,7 @@ function initModels() {
             fields: ['timestamp', 'program', 'title'],
           },
         ],
+        tableName: nameTable[i],
       }
     );
   }
@@ -39,17 +39,20 @@ function initModels() {
 
 class DB {
   static async cleanData() {
-    await db.query('DROP TABLE IF EXISTS "MinuteRecords";');
-    await db.query('DROP TABLE IF EXISTS "HourlyRecords";');
-    await db.query('DROP TABLE IF EXISTS "DailyRecords";');
+    await db.dropAllSchemas({ logging: true });
     await db.query('VACUUM;');
     await db.sync();
   }
 
   static async sync() {
-    db.query('PRAGMA journal_mode=WAL;');
-    initModels();
-    return db.sync();
+    try {
+      await db.query('PRAGMA journal_mode=WAL;');
+      initModels();
+      await db.sync();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
   }
 
   static async addDailyRecord(record: Optional<any, string> | undefined) {

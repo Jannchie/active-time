@@ -523,10 +523,10 @@ function App() {
         <TitleBar />
         <div className="flex overflow-hidden flex-grow">
           <div className="bg-zinc-500/10">
-            <div className="flex flex-col h-full children:rounded-lg gap-1 p-2 children:w-14 children:p-2 children:transition children:cursor-pointer">
+            <div className="flex flex-col h-full children:rounded-lg gap-1 p-2 children:w-14 children:p-2 children:transition">
               <button
                 type="button"
-                className={`hover:bg-zinc-500/40 ${
+                className={`cursor-pointer hover:bg-zinc-500/40 ${
                   pageIdx === 0 ? 'bg-zinc-500/20' : ''
                 }`}
                 onClick={() => {
@@ -544,7 +544,7 @@ function App() {
               <div className="flex-grow" />
               <button
                 type="button"
-                className={`hover:bg-zinc-500/40 ${
+                className={`cursor-pointer hover:bg-zinc-500/40 ${
                   pageIdx === 1 ? 'bg-zinc-500/20' : ''
                 }`}
                 onClick={() => {
@@ -561,7 +561,7 @@ function App() {
               </button>
               <button
                 type="button"
-                className={`hover:bg-zinc-500/40 ${
+                className={`cursor-pointer hover:bg-zinc-500/40 ${
                   pageIdx === 2 ? 'bg-zinc-500/20' : ''
                 }`}
                 onClick={() => {
