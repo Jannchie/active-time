@@ -8,6 +8,8 @@ export type Channels =
   | 'ready'
   | 'get-db-file-size'
   | 'clean-db-data'
+  | 'get-days-records'
+  | 'get-hours-records'
   | 'get-minutes-records';
 
 contextBridge.exposeInMainWorld('electron', {

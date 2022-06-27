@@ -20,6 +20,16 @@
   .j-body-color {
     @apply dark:text-zinc-300 text-zinc-800 dark:bg-zinc-900 bg-zinc-100 dark:fill-slate-100;
   }
+  .j-btn-group {
+    @apply flex justify-center my-2 uppercase children:text-center children:transition;
+    @apply children:bg-zinc-500/10 children:py-2 children:px-4 children:w-32;
+    @apply children:hover:cursor-pointer;
+    @apply hover:children:bg-zinc-500/30;
+  }
+  .j-btn-group > * {
+    @apply first:rounded-l-full;
+    @apply last:rounded-r-full;
+  }
 }
 
 body {

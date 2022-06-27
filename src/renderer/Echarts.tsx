@@ -28,9 +28,19 @@ function EchartsComponent({
 }: StationChartProps): JSX.Element {
   const canvas = useRef<HTMLDivElement>(null);
   const chart = useRef<ECharts>();
+
   const [h, setH] = useState<string | number>(height ?? 400);
   const [w, setW] = useState<string | number>(width ?? 600);
   const size = UseSize();
+
+  if (loading && !option) {
+    if (chart.current) {
+      chart.current?.showLoading('default', getLoadingTheme());
+    }
+  } else {
+    chart.current?.hideLoading();
+    chart.current?.resize(size);
+  }
 
   useEffect(() => {
     if (canvas.current !== null) {
@@ -69,16 +79,9 @@ function EchartsComponent({
   React.useEffect(() => {
     if (chart.current) {
       chart.current.setOption(option ?? {});
-      chart.current.resize();
+      // chart.current.resize();
     }
   }, [option]);
-
-  if (loading) {
-    chart.current?.showLoading('default', getLoadingTheme());
-  } else {
-    chart.current?.hideLoading();
-    chart.current?.resize(size);
-  }
 
   if (chart.current) {
     chart.current.resize({
@@ -104,8 +107,8 @@ function EchartsComponent({
 EchartsComponent.defaultProps = {
   height: undefined,
   width: undefined,
-  style: {},
-  option: {} as HTMLAttributes<HTMLDivElement>['style'],
+  style: {} as HTMLAttributes<HTMLDivElement>['style'],
+  option: undefined,
   loading: false,
   theme: 'light',
 };

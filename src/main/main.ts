@@ -13,16 +13,19 @@ import path from 'path';
 import log from 'electron-log';
 import { app, BrowserWindow, Menu, Tray, ipcMain, shell } from 'electron';
 import os from 'os';
-import cron from 'node-cron';
 import { uIOhook } from 'uiohook-napi';
 import activeWindows from '@jannchie/active-window';
 import fs from 'fs/promises';
 import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
-import { DB, MinuteRecord } from './db';
+import { getCurDay, getCurHour, getCurMinute, resolveHtmlPath } from './util';
+import { DB, DailyRecord, HourlyRecord, MinuteRecord } from './db';
 
-const data = {
+const data: {
+  closeable: boolean;
+  timer: NodeJS.Timer | null;
+} = {
   closeable: false,
+  timer: null,
 };
 
 function show(win: BrowserWindow) {
@@ -96,9 +99,19 @@ function setIpcHandle(win: BrowserWindow) {
     const systemInfo = getSystemInfo();
     return { systemInfo };
   });
+
   ipcMain.handle('get-minutes-records', async (_, duration: any) => {
     return DB.getMinuteRecords(duration as number);
   });
+
+  ipcMain.handle('get-hours-records', async (_, duration: any) => {
+    return DB.getHourlyRecords(duration as number);
+  });
+
+  ipcMain.handle('get-days-records', async (_, duration: any) => {
+    return DB.getDailyRcords(duration as number);
+  });
+
   ipcMain.handle('get-db-file-size', async () => {
     const p = `${app.getPath('userData')}/data.db`;
     return (await fs.stat(p)).size;
@@ -257,47 +270,72 @@ async function start() {
 }
 
 function detectActive() {
-  let secondData = new Map();
+  // Reset
+  if (data.timer) {
+    uIOhook.stop();
+    uIOhook.removeAllListeners();
+    clearInterval(data.timer);
+  }
   let event = new Map();
-  cron.schedule('* * * * *', async (now) => {
-    const curDatetime = new Date(
-      now.getTime() - 1 * 60 * 1000 - (now.getTime() % (1000 * 60))
-    );
-    secondData.forEach(async (v, k) => {
-      try {
-        const key = JSON.parse(k);
-        const record = await MinuteRecord.create({
-          program: key.program,
-          title: key.title,
-          event: key.event,
-          timestamp: curDatetime,
-          seconds: v,
-        });
-        console.log(record.toJSON());
-      } catch (e) {
-        console.log(e);
-      }
-    });
-    secondData = new Map();
-  });
-  setInterval(async () => {
+  function cleanEvent() {
+    event = new Map();
+  }
+  function getEvent() {
+    return event;
+  }
+  data.timer = setInterval(async () => {
     try {
-      if (event.size > 0) {
+      const eventInfo = getEvent();
+      if (eventInfo.size > 0) {
+        const now = new Date();
         const activeWindowsInfo = await activeWindows().getActiveWindow();
         const eventType =
-          (event.get('type') ?? 0) > settings.checkInterval ? 'type' : 'read';
-        const keyObj = {
-          program: activeWindowsInfo.windowClass,
-          title: activeWindowsInfo.windowName,
-          event: eventType,
-        };
-        const key = JSON.stringify(keyObj);
-        secondData.set(
-          key,
-          (secondData.get(key) ?? 0) + settings.checkInterval
-        );
-
-        event = new Map();
+          (eventInfo.get('type') ?? 0) > settings.checkInterval
+            ? 'type'
+            : 'read';
+        const program = activeWindowsInfo.windowClass;
+        const title = activeWindowsInfo.windowName;
+        const seconds = settings.checkInterval;
+        [DailyRecord, MinuteRecord, HourlyRecord].map(async (recordModel) => {
+          let curTime;
+          switch (recordModel.name) {
+            case 'MinuteRecord':
+              curTime = getCurMinute(now);
+              break;
+            case 'HourlyRecord':
+              curTime = getCurHour(now);
+              break;
+            case 'DailyRecord':
+              curTime = getCurDay(now);
+              break;
+            default:
+              throw new Error('Unknown record model');
+          }
+          const searchOptions = {
+            where: {
+              timestamp: curTime,
+              program,
+              title,
+              event: eventType,
+            },
+          };
+          try {
+            const [record, created] = await recordModel.findOrCreate(
+              searchOptions
+            );
+            if (created) {
+              record.set('event', eventType);
+              record.set('seconds', seconds);
+            } else {
+              record.set('event', eventType);
+              record.set('seconds', record.seconds + seconds);
+            }
+            await record.save();
+          } catch (e) {
+            console.log(e);
+          }
+        });
+        cleanEvent();
       }
     } catch (e) {
       console.log(e);

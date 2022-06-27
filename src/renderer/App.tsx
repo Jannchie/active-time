@@ -8,9 +8,10 @@ import {
 } from 'react';
 import { useRequest } from 'ahooks';
 import { Dialog, Transition } from '@headlessui/react';
+import { Result } from 'ahooks/lib/useRequest/src/types';
 import Echarts from './Echarts';
 import './App.css';
-import { getPieOpitons, getMinutesHistory } from './options';
+import { getPieOptions, getHistoryStackBarOptions } from './options';
 import packageInfo from '../../release/app/package.json';
 
 type GlobalData = {
@@ -181,49 +182,112 @@ function formatFileSzie(size: number) {
   return `${(size / 1024 / 1024 / 1024).toFixed(2)}GB`;
 }
 
-function RecentPage() {
-  const minutesRecordsResp = useRequest(
-    async () =>
-      window.electron.ipcRenderer.invoke(
-        'get-minutes-records',
-        60 * 60 * 1000 * 1
-      ),
-    { pollingInterval: 60 * 1000 }
-  );
-  const { theme } = useContext(GlobalCtx);
-  let trueSystem: 'dark' | 'light';
-  if (theme === 'system') {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      trueSystem = 'dark';
-    } else {
-      trueSystem = 'light';
-    }
-  } else {
-    trueSystem = theme;
-  }
+function ChartsView({
+  recordsResp,
+  theme,
+}: {
+  recordsResp: Result<any, []>;
+  theme: 'light' | 'dark';
+}) {
   return (
     <>
-      {minutesRecordsResp.data && minutesRecordsResp.data.length > 0 ? (
-        <>
-          <div>
-            <Echarts
-              option={getPieOpitons(minutesRecordsResp.data, 'event')}
-              height={300}
-              width="100%"
-              theme={trueSystem}
-              loading={minutesRecordsResp.loading}
-            />
-          </div>
-          <div>
-            <Echarts
-              option={getMinutesHistory(minutesRecordsResp.data)}
-              height={300}
-              width="100%"
-              theme={trueSystem}
-              loading={minutesRecordsResp.loading}
-            />
-          </div>
-        </>
+      <div className="flex">
+        <Echarts
+          option={getPieOptions(recordsResp.data, 'event')}
+          height={300}
+          width="100%"
+          theme={theme}
+          loading={recordsResp.loading}
+        />
+        <Echarts
+          option={getPieOptions(recordsResp.data, 'program', 5)}
+          height={300}
+          width="100%"
+          theme={theme}
+          loading={recordsResp.loading}
+        />
+      </div>
+      <div>
+        <Echarts
+          option={getHistoryStackBarOptions(recordsResp.data)}
+          height={300}
+          width="100%"
+          theme={theme}
+          loading={recordsResp.loading}
+        />
+      </div>
+    </>
+  );
+}
+function RecentPage() {
+  function getChannel(selecting: number) {
+    switch (selecting) {
+      case 1:
+        return 'get-hours-records';
+      case 2:
+        return 'get-days-records';
+      default:
+        return 'get-minutes-records';
+    }
+  }
+  function getDuration(selecting: number) {
+    switch (selecting) {
+      case 1:
+        return 60 * 60 * 72 * 1000;
+      case 2:
+        return 60 * 60 * 24 * 1000 * 90;
+      default:
+        return 60 * 60 * 1000 * 1;
+    }
+  }
+  const [selecting, setSelecting] = useState(0);
+  const recordsResp = useRequest(
+    async () =>
+      window.electron.ipcRenderer.invoke(
+        getChannel(selecting),
+        getDuration(selecting)
+      ),
+    { pollingInterval: 5 * 1000, refreshDeps: [selecting] }
+  );
+  const { theme } = useContext(GlobalCtx);
+  let trueTheme: 'dark' | 'light';
+  if (theme === 'system') {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      trueTheme = 'dark';
+    } else {
+      trueTheme = 'light';
+    }
+  } else {
+    trueTheme = theme;
+  }
+  const groupData = [
+    {
+      name: 'Minutely',
+    },
+    {
+      name: 'Hourly',
+    },
+    {
+      name: 'Daily',
+    },
+  ];
+  const groupItems = groupData.map((item, index) => {
+    return (
+      <button
+        type="button"
+        key={item.name}
+        className={`${selecting === index && 'bg-zinc-500/20'}`}
+        onClick={() => setSelecting(index)}
+      >
+        {item.name}
+      </button>
+    );
+  });
+  return (
+    <>
+      <div className="j-btn-group">{groupItems}</div>
+      {recordsResp.data && recordsResp.data.length > 0 ? (
+        <ChartsView recordsResp={recordsResp} theme={trueTheme} />
       ) : (
         <div className="inset-0 w-full h-full flex text-center align-middle justify-center items-center">
           <div>Collecting data. This will take up to 1 minute.</div>
