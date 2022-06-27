@@ -9,4 +9,12 @@ export class HourlyRecord extends Model {
 }
 export class MinuteRecord extends Model {
   declare seconds: number;
+
+  declare title: string;
+
+  declare event: string;
+
+  declare program: string;
+
+  declare timestamp: Date;
 }
