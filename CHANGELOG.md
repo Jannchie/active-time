@@ -1,6 +1,12 @@
 # Change log
 
-## [0.2.0 - Collect Hourly & Daily Data](https://github.com/Jannchie/active-time/releases/tag/v0.1.5)
+## [0.2.1 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.2.1)
+
+**What's Changed**
+
+- Fixed database bugs
+
+## [0.2.0 - Collect Hourly & Daily Data](https://github.com/Jannchie/active-time/releases/tag/v0.2.0)
 
 **What's Changed**
 
