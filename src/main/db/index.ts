@@ -82,10 +82,15 @@ class DB {
   }
 
   static async getDailyRcords(duration: number) {
-    return DailyRecord.findAll({
+    const data = await DailyRecord.findAll({
       raw: true,
       where: { timestamp: { [Op.gte]: new Date().getTime() - duration } },
     });
+    const offset = new Date().getTimezoneOffset() * 60 * 1000;
+    data.forEach((d) => {
+      d.timestamp = new Date(new Date(d.timestamp).getTime() + offset);
+    });
+    return data;
   }
 }
 export { DB, MinuteRecord, HourlyRecord, DailyRecord };
