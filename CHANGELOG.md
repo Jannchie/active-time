@@ -1,6 +1,12 @@
 # Change log
 
-## [0.2.2 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.2.1)
+## [0.2.3 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.2.3)
+
+**What's Changed**
+
+- Fixed time format
+
+## [0.2.2 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.2.2)
 
 **What's Changed**
 

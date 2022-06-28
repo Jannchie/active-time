@@ -26,5 +26,8 @@ export function getCurHour(now: Date) {
 }
 
 export function getCurDay(now: Date) {
-  return new Date(now.getTime() - (now.getTime() % (1000 * 60 * 60 * 24)));
+  return new Date(
+    new Date(now.toLocaleDateString()).getTime() -
+      now.getTimezoneOffset() * 60 * 1000
+  );
 }
