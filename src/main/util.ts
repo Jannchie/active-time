@@ -18,21 +18,16 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 export function getCurMinute(now: Date) {
-  return new Date(
-    now.getTime() - 1 * 60 * 1000 - (now.getTime() % (1000 * 60))
-  );
+  return new Date(now.getTime() - (now.getTime() % (1000 * 60)));
 }
 
 export function getCurHour(now: Date) {
-  return new Date(
-    now.getTime() - 1 * 60 * 60 * 1000 - (now.getTime() % (1000 * 60 * 60))
-  );
+  return new Date(now.getTime() - (now.getTime() % (1000 * 60 * 60)));
 }
 
 export function getCurDay(now: Date) {
   return new Date(
-    now.getTime() -
-      1 * 24 * 60 * 60 * 1000 -
-      (now.getTime() % (1000 * 60 * 60 * 24))
+    new Date(now.toLocaleDateString()).getTime() -
+      now.getTimezoneOffset() * 60 * 1000
   );
 }

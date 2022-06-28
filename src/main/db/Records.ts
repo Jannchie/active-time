@@ -3,6 +3,8 @@ import { Model } from 'sequelize';
 
 export class DailyRecord extends Model {
   declare seconds: number;
+
+  declare timestamp: string | Date;
 }
 export class HourlyRecord extends Model {
   declare seconds: number;
@@ -16,5 +18,5 @@ export class MinuteRecord extends Model {
 
   declare program: string;
 
-  declare timestamp: Date;
+  declare timestamp: Date | string;
 }
