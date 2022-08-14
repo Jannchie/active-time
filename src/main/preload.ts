@@ -10,7 +10,9 @@ export type Channels =
   | 'clean-db-data'
   | 'get-days-records'
   | 'get-hours-records'
-  | 'get-minutes-records';
+  | 'get-minutes-records'
+  | 'set-login-settings'
+  | 'get-login-item-settings';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

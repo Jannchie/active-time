@@ -8,7 +8,7 @@ const db = new Sequelize({
   dialectModule: sqlite3,
   storage: `${app.getPath('userData')}/data.db`,
   transactionType: Transaction.TYPES.IMMEDIATE,
-  logging: true,
+  logging: false,
 });
 
 function initModels() {

@@ -116,18 +116,32 @@ function setIpcHandle(win: BrowserWindow) {
     const p = `${app.getPath('userData')}/data.db`;
     return (await fs.stat(p)).size;
   });
+
   ipcMain.handle('clean-db-data', async () => {
     await DB.cleanData();
   });
+
   ipcMain.handle('hide', async () => {
     hide(win);
   });
+
   ipcMain.handle('minimize', async () => {
     win.minimize();
   });
+
   ipcMain.handle('quit', async () => {
     data.closeable = true;
     app.quit();
+  });
+  ipcMain.handle('set-login-settings', async (_, val) => {
+    app.setLoginItemSettings({
+      openAtLogin: val,
+      openAsHidden: val,
+    });
+    win.webContents.send(
+      'login-item-setting-changed',
+      app.getLoginItemSettings()
+    );
   });
   ipcMain.handle('toggle-record', (_, val) => {
     if (val === true) {
@@ -145,6 +159,13 @@ function setIpcHandle(win: BrowserWindow) {
       settings.recording = !settings.recording;
     }
     win.webContents.send('recording-changed', settings.recording);
+  });
+
+  ipcMain.handle('get-login-item-settings', () => {
+    win.webContents.send(
+      'login-item-setting-changed',
+      app.getLoginItemSettings()
+    );
   });
 }
 
