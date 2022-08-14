@@ -297,11 +297,30 @@ function RecentPage() {
   );
 }
 
+type LoginItemSettings = {
+  executableWillLaunchAtLogin: boolean;
+  launchItems: any[];
+  openAsHidden: boolean;
+  openAtLogin: boolean;
+  restoreState: boolean;
+  wasOpenedAsHidden: boolean;
+  wasOpenedAtLogin: boolean;
+};
+
 function SettingsPage() {
   const ctx = useContext(GlobalCtx);
   function active(theme: string) {
     return ctx.theme === theme;
   }
+
+  const [loginSettings, setLoginSettings] = useState<LoginItemSettings>();
+  useEffect(() => {
+    window.electron.ipcRenderer.invoke('get-login-item-settings');
+    window.electron.ipcRenderer.on('login-item-setting-changed', (val) => {
+      const settings = val as LoginItemSettings;
+      setLoginSettings(settings);
+    });
+  }, []);
   return (
     <div className="flex flex-col mx-4 my-2 gap-2">
       <div>
@@ -346,7 +365,42 @@ function SettingsPage() {
             Debug: <MySwitch />
           </div>
         </div> */}
-
+        {loginSettings && (
+          <div className="p-2 border rounded-lg border-zinc-500/20 mb-2">
+            <div className="text-sm text-zinc-500/80 py-1">General</div>
+            <div className="text-sm">Auto-start on boot?</div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className={`${
+                  !loginSettings.openAtLogin || 'j-btn-active'
+                } j-normal-btn`}
+                onClick={() => {
+                  window.electron.ipcRenderer.invoke(
+                    'set-login-settings',
+                    true
+                  );
+                }}
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                className={`${
+                  loginSettings.openAtLogin || 'j-btn-active'
+                } j-normal-btn`}
+                onClick={() => {
+                  window.electron.ipcRenderer.invoke(
+                    'set-login-settings',
+                    false
+                  );
+                }}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        )}
         <div className="p-2 border rounded-lg border-zinc-500/20 mb-2">
           <div className="text-sm text-zinc-500/80 py-1">Danger Zone</div>
           <MyModal
