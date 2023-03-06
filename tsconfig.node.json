@@ -12,6 +12,7 @@
     "vite.legacy.config.ts",
     "playwright.config.ts",
     "package.json",
+    "electron/db",
     "electron"
   ]
 }

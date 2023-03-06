@@ -1,6 +1,13 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
-import { release } from 'node:os'
+import { app, BrowserWindow, shell, Tray, Menu } from 'electron'
+import { release, platform } from 'node:os'
 import { join } from 'node:path'
+import activeWindow from '@jannchie/active-window'
+import { uIOhook } from 'uiohook-napi'
+import { throttle } from '../utils'
+import { insertRawRecord } from '../db'
+import { setIpcHandle } from './setIpcHandle'
+
+const activeW = activeWindow()
 
 // The built directory structure
 //
@@ -32,18 +39,20 @@ if (!app.requestSingleInstanceLock()) {
 // Remove electron security warnings
 // This warning only shows in development mode
 // Read more on https://www.electronjs.org/docs/latest/tutorial/security
-// process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 
 let win: BrowserWindow | null = null
 // Here, you can also use other preload
-const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
 
 async function createWindow () {
+  const preload = join(__dirname, '../preload/index.js')
   win = new BrowserWindow({
-    title: 'Main window',
-    icon: join(process.env.PUBLIC, 'favicon.ico'),
+    title: 'Active Time',
+    titleBarStyle: 'hiddenInset',
+    titleBarOverlay: true,
+    icon: join(process.env.PUBLIC, 'icon.ico'),
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -72,9 +81,94 @@ async function createWindow () {
     if (url.startsWith('https:')) void shell.openExternal(url)
     return { action: 'deny' }
   })
+  return win
 }
 
-void app.whenReady().then(createWindow)
+function show (win: BrowserWindow) {
+  win.show()
+  win.focus()
+}
+
+function hide (win: BrowserWindow) {
+  win.hide()
+}
+
+function exit (win: BrowserWindow) {
+  win.destroy()
+  app.quit()
+}
+
+function setTray (win: BrowserWindow) {
+  const trayMenuTemplate = [
+    {
+      label: 'Show',
+      click: () => {
+        show(win)
+      },
+    },
+    {
+      label: 'Hide',
+      click: () => {
+        hide(win)
+      },
+    },
+    {
+      label: 'Exit',
+      click: () => {
+        exit(win)
+      },
+    },
+  ]
+
+  // If the platform is OSX, we need to use template icons.
+  const iconPath = join(process.env.PUBLIC,
+    platform() === 'darwin' ? 'TrayTemplate.png' : 'Tray.png',
+  )
+  const appTray = new Tray(iconPath)
+  const contextMenu = Menu.buildFromTemplate(trayMenuTemplate)
+  appTray.setToolTip('Active Time')
+  appTray.setContextMenu(contextMenu)
+
+  // In darwin, the click event will pop up the context menu rather than show the window.
+  if (process.platform !== 'darwin') {
+    appTray.on('click', () => {
+      show(win)
+    })
+  }
+
+  return appTray
+}
+
+async function start () {
+  await app.whenReady()
+  // await DB.sync()
+  const win = await createWindow()
+  setTray(win)
+  setIpcHandle(win)
+}
+
+const saveData = throttle(() => {
+  void activeW.getActiveWindow().then(w => {
+    const data = {
+      name: w.windowClass,
+      title: w.windowName,
+      timestamp: new Date(),
+    }
+    void insertRawRecord(data)
+  })
+}, 1000)
+
+function detectActive () {
+  uIOhook.stop()
+  uIOhook.removeAllListeners()
+  uIOhook.start()
+  uIOhook.on('keydown', () => {
+    saveData()
+  })
+  uIOhook.on('mousemove', () => {
+    saveData()
+  })
+}
 
 app.on('window-all-closed', () => {
   win = null
@@ -98,20 +192,13 @@ app.on('activate', () => {
   }
 })
 
-// New window example arg: new windows url
-ipcMain.handle('open-win', (_, arg) => {
-  const childWindow = new BrowserWindow({
-    webPreferences: {
-      preload,
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-  })
-
-  if (process.env.VITE_DEV_SERVER_URL) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    void childWindow.loadURL(`${url}#${arg}`)
-  } else {
-    void childWindow.loadFile(indexHtml, { hash: arg })
-  }
+process.on('exit', () => {
+  uIOhook.stop()
+  uIOhook.removeAllListeners()
 })
+
+// eslint-disable-next-line no-console
+start().then(() => {
+  detectActive()
+// eslint-disable-next-line no-console
+}).catch(console.error)

@@ -7,7 +7,6 @@ import electron from 'vite-electron-plugin'
 import { customStart, loadViteEnv } from 'vite-electron-plugin/plugin'
 import renderer from 'vite-plugin-electron-renderer'
 import pkg from './package.json'
-import Icons from 'unplugin-icons/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -21,7 +20,6 @@ export default defineConfig(({ command }) => {
     },
     plugins: [
       react(),
-      Icons({ compiler: 'jsx', jsx: 'react' }),
       electron({
         include: [
           'electron',
