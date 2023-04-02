@@ -28,7 +28,7 @@ function NavBtn ({ to, children }: {
 function LeftMenu () {
   return (
     <Panel padding style={{ margin: 10, alignSelf: 'stretch' }}>
-      <Flex col gap=".5rem">
+      <Flex direction="column" gap=".5rem">
         <NavBtn to="/" >
           <CarbonDashboard width="2em" />
         </NavBtn>
@@ -44,16 +44,18 @@ function App () {
   useTheme()
   return (
     <HolyGrail
+      style={{ height: '100vh' }}
       header={<Panel border style={{ borderRadius: 0, height: 35, WebkitAppRegion: 'drag' } as any} />}
       innerLeft={<LeftMenu />}
       main={(
         <div style={{ marginTop: '0.5rem' }}>
           <Outlet />
         </div>)}
-      footer={<Panel border style={{ borderRadius: 0 }}>
+      footer={<Panel style={{ borderRadius: 0, borderLeft: 0, borderRight: 0, borderBottom: 0 }}>
         <Flex>
           <div style={{
             backgroundColor: 'hsl(var(--r-success-1))',
+            fontFamily: '"Share Tech Mono", monospace',
             fontSize: '0.75rem',
             paddingLeft: 10,
             paddingRight: 10,

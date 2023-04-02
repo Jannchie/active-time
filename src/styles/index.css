@@ -1,0 +1,8 @@
+body {
+  height: 100vh;
+}
+
+@font-face {
+  font-family: 'Share Tech Mono';
+  src: url('../assets/ShareTechMono-Regular.ttf');
+}

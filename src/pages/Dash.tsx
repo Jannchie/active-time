@@ -7,9 +7,10 @@ export function Dash () {
   const data = useSWR(`list-raw-records/${range}`, async () => {
     return await ipcRenderer.invoke('list-raw-records', range)
   })
+  // eslint-disable-next-line no-console
   console.log(data)
   return (
-    <Flex col gap="0.5rem">
+    <Flex direction="column" gap="0.5rem">
       <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Dashboard</h1>
       <Btn.Group value={range} setValue={setRange}>
         <Btn value={86400}>24 Hours</Btn>

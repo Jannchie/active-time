@@ -6,7 +6,6 @@ import { uIOhook } from 'uiohook-napi'
 import { throttle } from '../utils'
 import { insertRawRecord } from '../db'
 import { setIpcHandle } from './setIpcHandle'
-
 const activeW = activeWindow()
 
 // The built directory structure
@@ -50,8 +49,12 @@ async function createWindow () {
   const preload = join(__dirname, '../preload/index.js')
   win = new BrowserWindow({
     title: 'Active Time',
-    titleBarStyle: 'hiddenInset',
-    titleBarOverlay: true,
+    titleBarStyle: 'hidden',
+    backgroundColor: 'hsl(240, 5%, 10%)',
+    titleBarOverlay: {
+      color: 'hsl(240, 5%, 10%)',
+      symbolColor: '#888',
+    },
     icon: join(process.env.PUBLIC, 'icon.ico'),
     webPreferences: {
       preload,
