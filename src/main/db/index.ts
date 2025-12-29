@@ -1,7 +1,14 @@
 import sqlite3 from 'sqlite3';
 import { app } from 'electron';
 import { Sequelize, DataTypes, Optional, Op, Transaction } from 'sequelize';
-import { DailyRecord, HourlyRecord, MinuteRecord } from './Records';
+import {
+  DailyRecord,
+  ForegroundDailyRecord,
+  ForegroundHourlyRecord,
+  ForegroundMinuteRecord,
+  HourlyRecord,
+  MinuteRecord,
+} from './Records';
 
 const db = new Sequelize({
   dialect: 'sqlite',
@@ -11,30 +18,44 @@ const db = new Sequelize({
   logging: false,
 });
 
+function initModel(model: any, tableName: string, indexFields: string[]) {
+  model.init(
+    {
+      program: DataTypes.STRING,
+      title: DataTypes.STRING,
+      event: DataTypes.STRING,
+      timestamp: DataTypes.DATE,
+      seconds: DataTypes.INTEGER,
+    },
+    {
+      sequelize: db,
+      updatedAt: false,
+      indexes: [
+        {
+          fields: indexFields,
+        },
+      ],
+      tableName,
+    }
+  );
+}
+
 function initModels() {
-  const models = [DailyRecord, HourlyRecord, MinuteRecord];
-  const nameTable = ['daily_records', 'hourly_records', 'minute_records'];
-  for (let i = 0; i < models.length; i += 1) {
-    models[i].init(
-      {
-        program: DataTypes.STRING,
-        title: DataTypes.STRING,
-        event: DataTypes.STRING,
-        timestamp: DataTypes.DATE,
-        seconds: DataTypes.INTEGER,
-      },
-      {
-        sequelize: db,
-        updatedAt: false,
-        indexes: [
-          {
-            fields: ['timestamp', 'program', 'title'],
-          },
-        ],
-        tableName: nameTable[i],
-      }
-    );
-  }
+  initModel(DailyRecord, 'daily_records', ['timestamp', 'program', 'title']);
+  initModel(HourlyRecord, 'hourly_records', ['timestamp', 'program', 'title']);
+  initModel(MinuteRecord, 'minute_records', ['timestamp', 'program', 'title']);
+  initModel(ForegroundDailyRecord, 'foreground_daily_records', [
+    'timestamp',
+    'program',
+  ]);
+  initModel(ForegroundHourlyRecord, 'foreground_hourly_records', [
+    'timestamp',
+    'program',
+  ]);
+  initModel(ForegroundMinuteRecord, 'foreground_minute_records', [
+    'timestamp',
+    'program',
+  ]);
 }
 
 class DB {
@@ -92,5 +113,39 @@ class DB {
     });
     return data;
   }
+
+  static async getForegroundMinuteRecords(duration: number) {
+    return ForegroundMinuteRecord.findAll({
+      raw: true,
+      where: { timestamp: { [Op.gte]: new Date().getTime() - duration } },
+    });
+  }
+
+  static async getForegroundHourlyRecords(duration: number) {
+    return ForegroundHourlyRecord.findAll({
+      raw: true,
+      where: { timestamp: { [Op.gte]: new Date().getTime() - duration } },
+    });
+  }
+
+  static async getForegroundDailyRecords(duration: number) {
+    const data = await ForegroundDailyRecord.findAll({
+      raw: true,
+      where: { timestamp: { [Op.gte]: new Date().getTime() - duration } },
+    });
+    const offset = new Date().getTimezoneOffset() * 60 * 1000;
+    data.forEach((d) => {
+      d.timestamp = new Date(new Date(d.timestamp).getTime() + offset);
+    });
+    return data;
+  }
 }
-export { DB, MinuteRecord, HourlyRecord, DailyRecord };
+export {
+  DB,
+  MinuteRecord,
+  HourlyRecord,
+  DailyRecord,
+  ForegroundMinuteRecord,
+  ForegroundHourlyRecord,
+  ForegroundDailyRecord,
+};

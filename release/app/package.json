@@ -12,13 +12,14 @@
   "main": "./dist/main/main.js",
   "scripts": {
     "electron-rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
-    "postinstall": "npm run electron-rebuild && npm run link-modules",
+    "postinstall": "pnpm run electron-rebuild && pnpm run link-modules",
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {
     "@jannchie/active-window": "^1.0.1",
-    "sequelize": "^6.21.0",
-    "sqlite3": "^5.0.8",
-    "uiohook-napi": "^1.2.0"
-  }
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
+    "uiohook-napi": "^1.5.4"
+  },
+  "packageManager": "pnpm@10.26.2+sha512.0e308ff2005fc7410366f154f625f6631ab2b16b1d2e70238444dd6ae9d630a8482d92a451144debc492416896ed16f7b114a86ec68b8404b2443869e68ffda6"
 }

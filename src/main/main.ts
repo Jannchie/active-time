@@ -1,11 +1,11 @@
-/* eslint global-require: off, no-console: off, promise/always-return: off */
+/* eslint global-require: off, no-console: off */
 
 /**
  * This module executes inside of electron's main process. You can start
  * electron renderer process from here and communicate with the other processes
  * through IPC.
  *
- * When running `npm run build` or `npm run build:main`, this file is compiled to
+ * When running `pnpm run build` or `pnpm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import { autoUpdater } from 'electron-updater';
@@ -13,12 +13,92 @@ import path from 'path';
 import log from 'electron-log';
 import { app, BrowserWindow, Menu, Tray, ipcMain, shell } from 'electron';
 import os from 'os';
-import { uIOhook } from 'uiohook-napi';
-import activeWindows from '@jannchie/active-window';
 import fs from 'fs/promises';
 import MenuBuilder from './menu';
-import { getCurDay, getCurHour, getCurMinute, resolveHtmlPath } from './util';
-import { DB, DailyRecord, HourlyRecord, MinuteRecord } from './db';
+import {
+  autoDecodeText,
+  getCurDay,
+  getCurHour,
+  getCurMinute,
+  resolveHtmlPath,
+} from './util';
+import {
+  DB,
+  DailyRecord,
+  ForegroundDailyRecord,
+  ForegroundHourlyRecord,
+  ForegroundMinuteRecord,
+  HourlyRecord,
+  MinuteRecord,
+} from './db';
+import { listRunningProcessStats } from './processes';
+
+let uIOhook: any = null;
+let activeWindows: any = null;
+let activityTrackingUnavailableWarned = false;
+let activeStatusKey = '';
+const activeStatus = {
+  program: '',
+  title: '',
+  since: 0,
+};
+
+try {
+  ({ uIOhook } = require('uiohook-napi'));
+} catch (error) {
+  if (process.env.NODE_ENV !== 'development') {
+    throw error;
+  }
+}
+
+try {
+  const activeWindowModule = require('@jannchie/active-window');
+  activeWindows = activeWindowModule?.default ?? activeWindowModule;
+} catch (error) {
+  if (process.env.NODE_ENV !== 'development') {
+    throw error;
+  }
+}
+
+const canTrackForeground = () => Boolean(activeWindows);
+const getActiveStatus = async () => {
+  if (!canTrackForeground()) {
+    return { available: false };
+  }
+  try {
+    const info = await activeWindows().getActiveWindow();
+    if (!info) {
+      return { available: false };
+    }
+    const program = autoDecodeText(info.windowClass) ?? '';
+    const title = autoDecodeText(info.windowName) ?? '';
+    const key = `${program}::${title}`;
+    if (key && key !== activeStatusKey) {
+      activeStatusKey = key;
+      activeStatus.program = program;
+      activeStatus.title = title;
+      activeStatus.since = Date.now();
+    }
+    return {
+      available: true,
+      program: activeStatus.program,
+      title: activeStatus.title,
+      since: activeStatus.since,
+    };
+  } catch {
+    return { available: false };
+  }
+};
+
+const warnActivityTrackingUnavailable = () => {
+  if (activityTrackingUnavailableWarned) {
+    return;
+  }
+  activityTrackingUnavailableWarned = true;
+  console.warn(
+    'Activity tracking is disabled because native modules are unavailable.'
+  );
+};
 
 const data: {
   closeable: boolean;
@@ -51,14 +131,19 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 process.on('exit', () => {
-  uIOhook.stop();
+  uIOhook?.stop?.();
 });
 
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 if (isDebug) {
-  require('electron-debug')();
+  // Handle both CJS and ESM default exports.
+  const electronDebug = require('electron-debug');
+  const runDebug = electronDebug?.default ?? electronDebug;
+  if (typeof runDebug === 'function') {
+    runDebug();
+  }
 }
 
 const RESOURCES_PATH = app.isPackaged
@@ -112,6 +197,18 @@ function setIpcHandle(win: BrowserWindow) {
     return DB.getDailyRcords(duration as number);
   });
 
+  ipcMain.handle('get-foreground-minutes-records', async (_, duration: any) => {
+    return DB.getForegroundMinuteRecords(duration as number);
+  });
+
+  ipcMain.handle('get-foreground-hours-records', async (_, duration: any) => {
+    return DB.getForegroundHourlyRecords(duration as number);
+  });
+
+  ipcMain.handle('get-foreground-days-records', async (_, duration: any) => {
+    return DB.getForegroundDailyRecords(duration as number);
+  });
+
   ipcMain.handle('get-db-file-size', async () => {
     const p = `${app.getPath('userData')}/data.db`;
     return (await fs.stat(p)).size;
@@ -119,6 +216,14 @@ function setIpcHandle(win: BrowserWindow) {
 
   ipcMain.handle('clean-db-data', async () => {
     await DB.cleanData();
+  });
+
+  ipcMain.handle('get-active-window', async () => {
+    return getActiveStatus();
+  });
+
+  ipcMain.handle('get-running-processes', async () => {
+    return listRunningProcessStats();
   });
 
   ipcMain.handle('hide', async () => {
@@ -144,17 +249,23 @@ function setIpcHandle(win: BrowserWindow) {
     );
   });
   ipcMain.handle('toggle-record', (_, val) => {
+    if (!canTrackForeground()) {
+      warnActivityTrackingUnavailable();
+      settings.recording = false;
+      win.webContents.send('recording-changed', settings.recording);
+      return;
+    }
     if (val === true) {
-      uIOhook.start();
+      uIOhook?.start();
       settings.recording = true;
     } else if (val === false) {
-      uIOhook.stop();
+      uIOhook?.stop();
       settings.recording = false;
     } else {
       if (settings.recording) {
-        uIOhook.stop();
+        uIOhook?.stop();
       } else {
-        uIOhook.start();
+        uIOhook?.start();
       }
       settings.recording = !settings.recording;
     }
@@ -186,13 +297,22 @@ const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
+  const isWindows = process.platform === 'win32';
   const mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
     height: 728,
     minWidth: 600,
     icon: getAssetPath('icon.png'),
-    titleBarStyle: 'hidden',
+    frame: !isWindows,
+    titleBarStyle: isWindows ? 'hidden' : 'default',
+    titleBarOverlay: isWindows
+      ? {
+          color: '#00000000',
+          symbolColor: '#111827',
+          height: 40,
+        }
+      : false,
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
@@ -213,6 +333,7 @@ const createWindow = async () => {
       }
     });
   }
+  setIpcHandle(mainWindow);
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
   mainWindow.on('ready-to-show', () => {
@@ -246,7 +367,7 @@ const createWindow = async () => {
   });
   // Remove this if your app does not use auto updates
   try {
-    // eslint-disable-next-line
+    // eslint-disable-next-line no-new
     new AppUpdater();
   } catch (e) {
     console.log(e);
@@ -300,14 +421,17 @@ async function start() {
   await DB.sync();
   const win = await createWindow();
   setTray(win);
-  setIpcHandle(win);
 }
 
 function detectActive() {
+  if (!canTrackForeground()) {
+    warnActivityTrackingUnavailable();
+    return;
+  }
   // Reset
   if (data.timer) {
-    uIOhook.stop();
-    uIOhook.removeAllListeners();
+    uIOhook?.stop?.();
+    uIOhook?.removeAllListeners?.();
     clearInterval(data.timer);
   }
   let event = new Map();
@@ -317,19 +441,62 @@ function detectActive() {
   function getEvent() {
     return event;
   }
+  const updateForeground = async (
+    now: Date,
+    program: string,
+    seconds: number
+  ) => {
+    const models = [
+      [ForegroundDailyRecord, getCurDay(now)],
+      [ForegroundMinuteRecord, getCurMinute(now)],
+      [ForegroundHourlyRecord, getCurHour(now)],
+    ] as const;
+    await Promise.all(
+      models.map(async ([model, curTime]) => {
+        const searchOptions = {
+          where: {
+            timestamp: curTime,
+            program,
+          },
+        };
+        let record: any;
+        let created: boolean;
+        [record, created] = await model.findOrCreate(searchOptions);
+        if (created) {
+          record.set('seconds', seconds);
+        } else {
+          record.set('seconds', record.seconds + seconds);
+        }
+        record.set('program', program);
+        await record.save();
+      })
+    );
+  };
+
   data.timer = setInterval(async () => {
     try {
+      if (!settings.recording) {
+        cleanEvent();
+        return;
+      }
       const eventInfo = getEvent();
+      const now = new Date();
+      const activeWindowsInfo = await activeWindows().getActiveWindow();
+      if (!activeWindowsInfo) {
+        cleanEvent();
+        return;
+      }
+      const program = autoDecodeText(activeWindowsInfo.windowClass) ?? '';
+      const title = autoDecodeText(activeWindowsInfo.windowName) ?? '';
+      const seconds = settings.checkInterval;
+      if (program) {
+        await updateForeground(now, program, seconds);
+      }
       if (eventInfo.size > 0) {
-        const now = new Date();
-        const activeWindowsInfo = await activeWindows().getActiveWindow();
         const eventType =
           (eventInfo.get('type') ?? 0) > settings.checkInterval
             ? 'type'
             : 'read';
-        const program = activeWindowsInfo.windowClass;
-        const title = activeWindowsInfo.windowName;
-        const seconds = settings.checkInterval;
         [DailyRecord, MinuteRecord, HourlyRecord].map(async (_, i) => {
           let curTime;
           switch (i) {
@@ -391,19 +558,19 @@ function detectActive() {
       console.log(e);
     }
   }, 1000 * settings.checkInterval);
-  uIOhook.on('keydown', () => {
+  uIOhook?.on?.('keydown', () => {
     event.set('type', (event.get('type') ?? 0) + 1);
   });
-  uIOhook.on('mousedown', () => {
+  uIOhook?.on?.('mousedown', () => {
     event.set('read', (event.get('read') ?? 0) + 1);
   });
-  uIOhook.on('mousemove', () => {
+  uIOhook?.on?.('mousemove', () => {
     event.set('read', (event.get('read') ?? 0) + 1);
   });
-  uIOhook.on('wheel', () => {
+  uIOhook?.on?.('wheel', () => {
     event.set('read', (event.get('read') ?? 0) + 1);
   });
-  uIOhook.start();
+  uIOhook?.start?.();
 }
 detectActive();
 start().catch(console.log);

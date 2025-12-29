@@ -19,35 +19,29 @@ jobs:
         run: |
           sudo apt-get install -y libx11-dev
 
-      - name: Install Node.js and NPM
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
-          cache: npm
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            release/app/pnpm-lock.yaml
 
-      - name: Cache node modules
-        id: cache-npm
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
-      - name: npm install
+      - name: pnpm install
         run: |
-          npm install
+          pnpm install
 
-      - name: npm test
+      - name: pnpm test
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm run package
-          npm run lint
-          npm exec tsc
-          npm test
+          pnpm run package
+          pnpm run lint
+          pnpm exec tsc
+          pnpm test

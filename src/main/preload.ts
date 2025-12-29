@@ -11,8 +11,15 @@ export type Channels =
   | 'get-days-records'
   | 'get-hours-records'
   | 'get-minutes-records'
+  | 'get-foreground-days-records'
+  | 'get-foreground-hours-records'
+  | 'get-foreground-minutes-records'
+  | 'get-active-window'
+  | 'get-running-processes'
   | 'set-login-settings'
-  | 'get-login-item-settings';
+  | 'get-login-item-settings'
+  | 'login-item-setting-changed'
+  | 'recording-changed';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

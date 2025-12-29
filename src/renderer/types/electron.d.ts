@@ -1,10 +1,8 @@
-import { Channels } from 'main/preload';
-
 declare global {
   interface Window {
-    electron: {
+    electron?: {
       ipcRenderer: {
-        invoke(channel: Channels, args?: unknown): Promise<any>;
+        invoke(channel: string, args?: unknown): Promise<any>;
         on(
           channel: string,
           func: (...args: unknown[]) => void

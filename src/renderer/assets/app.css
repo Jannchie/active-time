@@ -1,0 +1,107 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@font-face {
+  font-family: 'Berkeley Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://cdn.jannchie.com/fonts/BerkeleyMono-Regular.woff2')
+    format('woff2');
+}
+
+@font-face {
+  font-family: 'Berkeley Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://cdn.jannchie.com/fonts/BerkeleyMono-Bold.woff2')
+    format('woff2');
+}
+
+:root {
+  --font-display-latin:
+    'Berkeley Mono', 'Space Grotesk', 'Inter', system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --font-display-zh:
+    'Berkeley Mono', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
+    'Heiti SC', sans-serif;
+  --font-display-ja:
+    'Berkeley Mono', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  --font-title-latin:
+    'Berkeley Mono', 'Space Grotesk', 'Inter', system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --font-title-zh:
+    'Berkeley Mono', 'Noto Serif SC', 'Songti SC', 'Noto Serif', serif;
+  --font-title-ja:
+    'Berkeley Mono', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --ui-header-height: 40px;
+  --app-bg: #f3f4f6;
+  --app-accent: #111827;
+  --app-accent-strong: #111827;
+  --app-surface: #ffffff;
+  --app-surface-strong: #f9fafb;
+  --app-surface-soft: #f3f4f6;
+  --app-border: #e5e7eb;
+  --app-text: #111827;
+  --app-muted: #6b7280;
+  --app-shadow: none;
+}
+
+.dark {
+  --app-bg: #0f172a;
+  --app-accent: #f3f4f6;
+  --app-accent-strong: #f3f4f6;
+  --app-surface: #111827;
+  --app-surface-strong: #1f2937;
+  --app-surface-soft: #0b1220;
+  --app-border: #1f2937;
+  --app-text: #f3f4f6;
+  --app-muted: #94a3b8;
+  --app-shadow: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-display-latin);
+  color: var(--app-text);
+  background-color: var(--app-bg);
+  min-height: 100vh;
+}
+
+.dark body {
+  background-color: var(--app-bg);
+}
+
+.panel {
+  background: var(--app-surface);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.status-bar {
+  border-top: 1px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--app-border);
+  border-radius: 999px;
+}

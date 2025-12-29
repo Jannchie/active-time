@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { Model } from 'sequelize';
 
 export class DailyRecord extends Model {
@@ -15,6 +14,30 @@ export class MinuteRecord extends Model {
   declare title: string;
 
   declare event: string;
+
+  declare program: string;
+
+  declare timestamp: Date | string;
+}
+
+export class ForegroundDailyRecord extends Model {
+  declare seconds: number;
+
+  declare program: string;
+
+  declare timestamp: Date | string;
+}
+
+export class ForegroundHourlyRecord extends Model {
+  declare seconds: number;
+
+  declare program: string;
+
+  declare timestamp: Date | string;
+}
+
+export class ForegroundMinuteRecord extends Model {
+  declare seconds: number;
 
   declare program: string;
 
