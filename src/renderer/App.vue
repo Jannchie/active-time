@@ -56,12 +56,14 @@ import SidebarStatus from '@/components/SidebarStatus.vue';
 import DashboardView from '@/views/DashboardView.vue';
 import SettingsView from '@/views/SettingsView.vue';
 import AboutView from '@/views/AboutView.vue';
+import { useElectron } from '@/composables/useElectron';
 
 type ThemeMode = 'dark' | 'light' | 'system';
 
 const activeView = ref('dashboard');
 const theme = ref<ThemeMode>('system');
 let mediaQuery: MediaQueryList | null = null;
+const electron = useElectron();
 
 const handleMediaChange = () => {
   if (theme.value === 'system') {
@@ -78,6 +80,9 @@ const applyTheme = () => {
     window.matchMedia('(prefers-color-scheme: dark)').matches;
   const isDark = theme.value === 'dark' || prefersDark;
   document.documentElement.classList.toggle('dark', isDark);
+  if (electron) {
+    electron.invoke('set-titlebar-theme', isDark);
+  }
 };
 
 const setTheme = (value: ThemeMode) => {

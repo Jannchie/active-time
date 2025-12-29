@@ -15,6 +15,7 @@ export type Channels =
   | 'get-foreground-hours-records'
   | 'get-foreground-minutes-records'
   | 'get-active-window'
+  | 'set-titlebar-theme'
   | 'get-running-processes'
   | 'set-login-settings'
   | 'get-login-item-settings'

@@ -22,15 +22,7 @@ import {
   getCurMinute,
   resolveHtmlPath,
 } from './util';
-import {
-  DB,
-  DailyRecord,
-  ForegroundDailyRecord,
-  ForegroundHourlyRecord,
-  ForegroundMinuteRecord,
-  HourlyRecord,
-  MinuteRecord,
-} from './db';
+import { DB } from './db';
 import { listRunningProcessStats } from './processes';
 
 let uIOhook: any = null;
@@ -220,6 +212,17 @@ function setIpcHandle(win: BrowserWindow) {
 
   ipcMain.handle('get-active-window', async () => {
     return getActiveStatus();
+  });
+
+  ipcMain.handle('set-titlebar-theme', async (_, isDark: boolean) => {
+    if (process.platform !== 'win32') {
+      return;
+    }
+    win.setTitleBarOverlay({
+      color: '#00000000',
+      symbolColor: isDark ? '#e5e7eb' : '#111827',
+      height: 40,
+    });
   });
 
   ipcMain.handle('get-running-processes', async () => {
@@ -446,30 +449,20 @@ function detectActive() {
     program: string,
     seconds: number
   ) => {
-    const models = [
-      [ForegroundDailyRecord, getCurDay(now)],
-      [ForegroundMinuteRecord, getCurMinute(now)],
-      [ForegroundHourlyRecord, getCurHour(now)],
+    const scopes = [
+      { scope: 'day', timestamp: getCurDay(now) },
+      { scope: 'minute', timestamp: getCurMinute(now) },
+      { scope: 'hour', timestamp: getCurHour(now) },
     ] as const;
     await Promise.all(
-      models.map(async ([model, curTime]) => {
-        const searchOptions = {
-          where: {
-            timestamp: curTime,
-            program,
-          },
-        };
-        let record: any;
-        let created: boolean;
-        [record, created] = await model.findOrCreate(searchOptions);
-        if (created) {
-          record.set('seconds', seconds);
-        } else {
-          record.set('seconds', record.seconds + seconds);
-        }
-        record.set('program', program);
-        await record.save();
-      })
+      scopes.map((item) =>
+        DB.incrementForegroundRecord({
+          scope: item.scope,
+          timestamp: item.timestamp,
+          program,
+          seconds,
+        })
+      )
     );
   };
 
@@ -497,61 +490,23 @@ function detectActive() {
           (eventInfo.get('type') ?? 0) > settings.checkInterval
             ? 'type'
             : 'read';
-        [DailyRecord, MinuteRecord, HourlyRecord].map(async (_, i) => {
-          let curTime;
-          switch (i) {
-            case 1:
-              curTime = getCurMinute(now);
-              break;
-            case 2:
-              curTime = getCurHour(now);
-              break;
-            case 0:
-              curTime = getCurDay(now);
-              break;
-            default:
-              throw new Error('Unknown record model');
-          }
-          const searchOptions = {
-            where: {
-              timestamp: curTime,
+        const scopes = [
+          { scope: 'day', timestamp: getCurDay(now) },
+          { scope: 'minute', timestamp: getCurMinute(now) },
+          { scope: 'hour', timestamp: getCurHour(now) },
+        ] as const;
+        await Promise.all(
+          scopes.map((item) =>
+            DB.incrementActivityRecord({
+              scope: item.scope,
+              timestamp: item.timestamp,
               program,
               title,
               event: eventType,
-            },
-          };
-          try {
-            let record: any;
-            let created: boolean;
-            switch (i) {
-              case 0:
-                [record, created] = await DailyRecord.findOrCreate(
-                  searchOptions
-                );
-                break;
-              case 1:
-                [record, created] = await MinuteRecord.findOrCreate(
-                  searchOptions
-                );
-                break;
-              default:
-                [record, created] = await HourlyRecord.findOrCreate(
-                  searchOptions
-                );
-                break;
-            }
-            if (created) {
-              record.set('event', eventType);
-              record.set('seconds', seconds);
-            } else {
-              record.set('event', eventType);
-              record.set('seconds', record.seconds + seconds);
-            }
-            await record.save();
-          } catch (e) {
-            console.log(e);
-          }
-        });
+              seconds,
+            })
+          )
+        );
         cleanEvent();
       }
     } catch (e) {
