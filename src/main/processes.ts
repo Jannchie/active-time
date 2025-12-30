@@ -1,110 +1,8 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { autoDecodeText } from './util';
 
 const execFileAsync = promisify(execFile);
-
-type ProcessEntry = {
-  name: string;
-  seconds: number;
-};
-
-export type ProcessStats = {
-  name: string;
-  seconds: number;
-  count: number;
-};
-
-const parseEtime = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return 0;
-  }
-  const [dayPart, timePartRaw] = trimmed.includes('-')
-    ? (trimmed.split('-') as [string, string])
-    : [null, trimmed];
-  const days = dayPart ? Number(dayPart) : 0;
-  const timePart = timePartRaw ?? trimmed;
-  const parts = timePart.split(':').map((item) => Number(item));
-  let seconds = 0;
-  if (parts.length === 3) {
-    seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-  } else if (parts.length === 2) {
-    seconds = parts[0] * 60 + parts[1];
-  } else if (parts.length === 1) {
-    seconds = parts[0];
-  }
-  return days * 86400 + seconds;
-};
-
-const parseWmiDate = (value: string) => {
-  const trimmed = value.trim();
-  const jsonDateMatch = /^\/Date\((\d+)([+-]\d{4})?\)\/$/.exec(trimmed);
-  if (jsonDateMatch) {
-    const ms = Number(jsonDateMatch[1]);
-    if (!Number.isFinite(ms)) {
-      return null;
-    }
-    return ms;
-  }
-  const match =
-    /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.\d+([+-]\d{3})$/.exec(
-      trimmed
-    );
-  if (!match) {
-    return null;
-  }
-  const [, year, month, day, hour, minute, second, offset] = match;
-  const offsetMinutes = Number(offset);
-  const utcMs =
-    Date.UTC(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
-      Number(second)
-    ) - offsetMinutes * 60 * 1000;
-  return utcMs;
-};
-
-const listWindows = async (): Promise<ProcessEntry[]> => {
-  const command =
-    'Get-CimInstance Win32_Process | Select-Object ProcessId, Name, CreationDate | ConvertTo-Json -Compress';
-  const { stdout } = await execFileAsync('powershell', ['-NoProfile', '-Command', command], {
-    encoding: 'utf8',
-    windowsHide: true,
-  });
-  const raw = stdout.trim();
-  if (!raw) {
-    return [];
-  }
-  let data: any;
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    return [];
-  }
-  const list = Array.isArray(data) ? data : [data];
-  const now = Date.now();
-  return list
-    .map((item) => {
-      const startedAt = item?.CreationDate
-        ? parseWmiDate(String(item.CreationDate))
-        : null;
-      if (!startedAt) {
-        return null;
-      }
-      const seconds = Math.max(0, Math.floor((now - startedAt) / 1000));
-      return {
-        name: String(item?.Name ?? ''),
-        seconds,
-      };
-    })
-    .filter(
-      (item): item is ProcessEntry =>
-        Boolean(item && item.name && Number.isFinite(item.seconds))
-    );
-};
 
 const parseTasklistNames = (stdout: string) => {
   return stdout
@@ -127,69 +25,64 @@ const listWindowsNames = async (): Promise<string[]> => {
     'tasklist',
     ['/FO', 'CSV', '/NH'],
     {
-      encoding: 'utf8',
+      encoding: 'buffer',
       windowsHide: true,
     }
   );
-  return parseTasklistNames(stdout);
+  const decoded = autoDecodeText(stdout);
+  if (!decoded) {
+    return [];
+  }
+  return parseTasklistNames(decoded);
 };
 
-const parsePsSeconds = (stdout: string) => {
-  return stdout
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const match = /^(\d+)\s+(\S+)\s+(\d+)$/.exec(line);
-      if (!match) {
-        return null;
-      }
-      return {
-        name: match[2],
-        seconds: Number(match[3]),
-      };
-    })
-    .filter(
-      (item): item is ProcessEntry =>
-        Boolean(item && item.name && Number.isFinite(item.seconds))
-    );
-};
-
-const parsePsEtime = (stdout: string) => {
-  return stdout
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const match = /^(\d+)\s+(\S+)\s+(.+)$/.exec(line);
-      if (!match) {
-        return null;
-      }
-      return {
-        name: match[2],
-        seconds: parseEtime(match[3]),
-      };
-    })
-    .filter(
-      (item): item is ProcessEntry =>
-        Boolean(item && item.name && Number.isFinite(item.seconds))
-    );
-};
-
-const listUnix = async (): Promise<ProcessEntry[]> => {
-  const { stdout } = await execFileAsync(
-    'ps',
-    ['-eo', 'pid=,comm=,etimes='],
-    { encoding: 'utf8' }
-  );
-  return parsePsSeconds(stdout);
-};
-
-const listDarwin = async (): Promise<ProcessEntry[]> => {
-  const { stdout } = await execFileAsync('ps', ['-eo', 'pid=,comm=,etime='], {
-    encoding: 'utf8',
+const parseWmicProcessPaths = (stdout: string) => {
+  const map = new Map<string, string>();
+  let name = '';
+  let path = '';
+  const flush = () => {
+    if (name && path && !map.has(name)) {
+      map.set(name, path);
+    }
+    name = '';
+    path = '';
+  };
+  stdout.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flush();
+      return;
+    }
+    const [keyRaw, ...rest] = trimmed.split('=');
+    if (!keyRaw) {
+      return;
+    }
+    const key = keyRaw.trim().toLowerCase();
+    const value = rest.join('=').trim();
+    if (key === 'name') {
+      name = value;
+    } else if (key === 'executablepath') {
+      path = value;
+    }
   });
-  return parsePsEtime(stdout);
+  flush();
+  return map;
+};
+
+export const listWindowsProcessPaths = async (): Promise<Map<string, string>> => {
+  const { stdout } = await execFileAsync(
+    'wmic',
+    ['process', 'get', 'Name,ExecutablePath', '/VALUE'],
+    {
+      encoding: 'buffer',
+      windowsHide: true,
+    }
+  );
+  const decoded = autoDecodeText(stdout) ?? '';
+  if (!decoded) {
+    return new Map();
+  }
+  return parseWmicProcessPaths(decoded);
 };
 
 const listUnixNames = async (): Promise<string[]> => {
@@ -204,41 +97,6 @@ const listUnixNames = async (): Promise<string[]> => {
 
 const listDarwinNames = async (): Promise<string[]> => {
   return listUnixNames();
-};
-
-const aggregateStats = (entries: ProcessEntry[]): ProcessStats[] => {
-  const totals = new Map<string, ProcessStats>();
-  for (const entry of entries) {
-    if (!entry.name) {
-      continue;
-    }
-    const existing = totals.get(entry.name);
-    if (existing) {
-      existing.seconds += entry.seconds;
-      existing.count += 1;
-    } else {
-      totals.set(entry.name, {
-        name: entry.name,
-        seconds: entry.seconds,
-        count: 1,
-      });
-    }
-  }
-  return [...totals.values()].sort((a, b) => b.seconds - a.seconds);
-};
-
-export const listRunningProcessStats = async (): Promise<ProcessStats[]> => {
-  try {
-    if (process.platform === 'win32') {
-      return aggregateStats(await listWindows());
-    }
-    if (process.platform === 'darwin') {
-      return aggregateStats(await listDarwin());
-    }
-    return aggregateStats(await listUnix());
-  } catch {
-    return [];
-  }
 };
 
 export const listRunningProcessNames = async (): Promise<string[]> => {

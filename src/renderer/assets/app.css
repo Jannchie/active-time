@@ -57,6 +57,14 @@ body {
   padding: 16px;
 }
 
+.app-sidebar {
+  min-width: 220px;
+}
+
+.app-sidebar[data-collapsed='true'] {
+  min-width: 64px;
+}
+
 .drag-region {
   -webkit-app-region: drag;
 }

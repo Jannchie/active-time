@@ -1,12 +1,19 @@
 <template>
   <UApp>
     <UDashboardGroup>
-      <UDashboardSidebar :collapsible="true" :resizable="false">
+      <UDashboardSidebar
+        class="app-sidebar"
+        :collapsible="true"
+        :resizable="false"
+        :min-size="18"
+        :default-size="20"
+        :collapsed-size="6"
+      >
         <template #header="{ collapsed }">
           <div class="flex w-full items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <div
-                class="flex h-7 w-7 items-center justify-center rounded-md border bg-muted"
+                class="flex h-7 w-7 items-center justify-center rounded-md bg-muted/70 text-muted"
               >
                 <UIcon name="i-lucide-timer" class="h-4 w-4" />
               </div>
@@ -17,7 +24,10 @@
                 Active Time
               </div>
             </div>
-            <UDashboardSidebarCollapse class="no-drag" size="xs" />
+            <UDashboardSidebarCollapse
+              class="no-drag opacity-70 hover:opacity-100"
+              size="xs"
+            />
           </div>
         </template>
         <template #default="{ collapsed }">
@@ -50,6 +60,7 @@ import SidebarNav from '@/components/SidebarNav.vue';
 import StatusBar from '@/components/StatusBar.vue';
 import SidebarStatus from '@/components/SidebarStatus.vue';
 import DashboardView from '@/views/DashboardView.vue';
+import ProcessesView from '@/views/ProcessesView.vue';
 import SettingsView from '@/views/SettingsView.vue';
 import AboutView from '@/views/AboutView.vue';
 import { useElectron } from '@/composables/useElectron';
@@ -87,6 +98,8 @@ const setTheme = (value: ThemeMode) => {
 
 const currentView = computed(() => {
   switch (activeView.value) {
+    case 'processes':
+      return ProcessesView;
     case 'settings':
       return SettingsView;
     case 'about':
@@ -123,6 +136,14 @@ onMounted(() => {
     theme.value = stored;
   }
   applyTheme();
+
+  const storedInterval = localStorage.getItem('checkInterval');
+  if (storedInterval !== null && electron) {
+    const numeric = Number(storedInterval);
+    if (Number.isFinite(numeric)) {
+      electron.invoke('set-check-interval', numeric);
+    }
+  }
 
   mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   mediaQuery.addEventListener('change', handleMediaChange);

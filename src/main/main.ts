@@ -23,7 +23,7 @@ import {
   resolveHtmlPath,
 } from './util';
 import { DB } from './db';
-import { listRunningProcessNames, listRunningProcessStats } from './processes';
+import { listRunningProcessNames, listWindowsProcessPaths } from './processes';
 
 let uIOhook: any = null;
 let activeWindows: any = null;
@@ -33,6 +33,66 @@ const activeStatus = {
   program: '',
   title: '',
   since: 0,
+};
+const foregroundProgramCache = new Set<string>();
+const programIconCache = new Map<string, string | null>();
+const programPathCache = new Map<string, string>();
+const PATH_REFRESH_INTERVAL_MS = 60 * 1000;
+let lastPathRefresh = 0;
+
+const normalizeProgramName = (value: string) => value.trim().toLowerCase();
+
+const refreshWindowsPathCache = async () => {
+  if (process.platform !== 'win32') {
+    return;
+  }
+  const now = Date.now();
+  if (now - lastPathRefresh < PATH_REFRESH_INTERVAL_MS) {
+    return;
+  }
+  lastPathRefresh = now;
+  try {
+    const map = await listWindowsProcessPaths();
+    map.forEach((filePath, programName) => {
+      const normalized = normalizeProgramName(programName);
+      if (normalized && filePath) {
+        programPathCache.set(normalized, filePath);
+      }
+    });
+  } catch {
+    // Ignore process cache refresh errors.
+  }
+};
+
+const resolveProgramIcon = async (programName: string): Promise<string | null> => {
+  const normalized = normalizeProgramName(programName);
+  if (!normalized) {
+    return null;
+  }
+  if (programIconCache.has(normalized)) {
+    return programIconCache.get(normalized) ?? null;
+  }
+  let iconData: string | null = null;
+  if (process.platform === 'win32') {
+    const filePath = programPathCache.get(normalized);
+    if (filePath) {
+      try {
+        const icon = await app.getFileIcon(filePath, { size: 'small' });
+        iconData = icon.toDataURL();
+      } catch {
+        iconData = null;
+      }
+    }
+  }
+  programIconCache.set(normalized, iconData);
+  return iconData;
+};
+
+const trackForegroundProgram = (program: string) => {
+  const normalized = normalizeProgramName(program);
+  if (normalized) {
+    foregroundProgramCache.add(normalized);
+  }
 };
 
 try {
@@ -62,8 +122,7 @@ const getActiveStatus = async () => {
     if (!info) {
       return { available: false };
     }
-    const program = autoDecodeText(info.windowClass) ?? '';
-    const title = autoDecodeText(info.windowName) ?? '';
+    const { program, title } = resolveActiveWindowInfo(info);
     const key = `${program}::${title}`;
     if (key && key !== activeStatusKey) {
       activeStatusKey = key;
@@ -90,6 +149,23 @@ const warnActivityTrackingUnavailable = () => {
   console.warn(
     'Activity tracking is disabled because native modules are unavailable.'
   );
+};
+
+const resolveActiveWindowInfo = (info: any) => {
+  const program = autoDecodeText(info?.windowClass) ?? '';
+  const title = autoDecodeText(info?.windowName) ?? '';
+  return { program, title };
+};
+
+const loadForegroundPrograms = async () => {
+  try {
+    const programs = await DB.listForegroundPrograms();
+    programs.forEach((program) => {
+      trackForegroundProgram(program);
+    });
+  } catch {
+    // Ignore cache hydration errors.
+  }
 };
 
 const data: {
@@ -151,6 +227,17 @@ const settings = {
   checkInterval: 5,
   theme: 'system',
   language: 'en',
+};
+
+const MIN_CHECK_INTERVAL = 1;
+const MAX_CHECK_INTERVAL = 60;
+
+const normalizeCheckInterval = (value: unknown) => {
+  const numeric = Math.round(Number(value));
+  if (!Number.isFinite(numeric)) {
+    return settings.checkInterval;
+  }
+  return Math.min(MAX_CHECK_INTERVAL, Math.max(MIN_CHECK_INTERVAL, numeric));
 };
 
 export default class AppUpdater {
@@ -237,10 +324,6 @@ function setIpcHandle(win: BrowserWindow) {
     });
   });
 
-  ipcMain.handle('get-running-processes', async () => {
-    return listRunningProcessStats();
-  });
-
   ipcMain.handle('hide', async () => {
     hide(win);
   });
@@ -293,6 +376,42 @@ function setIpcHandle(win: BrowserWindow) {
       app.getLoginItemSettings()
     );
   });
+
+  ipcMain.handle('get-check-interval', () => settings.checkInterval);
+
+  ipcMain.handle('set-check-interval', async (_, value: unknown) => {
+    const next = normalizeCheckInterval(value);
+    if (next === settings.checkInterval) {
+      return settings.checkInterval;
+    }
+    settings.checkInterval = next;
+    detectActive();
+    win.webContents.send('check-interval-changed', settings.checkInterval);
+    return settings.checkInterval;
+  });
+
+  ipcMain.handle('get-program-icons', async (_, names: unknown) => {
+    if (!Array.isArray(names)) {
+      return {};
+    }
+    const uniqueNames = [
+      ...new Set(
+        names
+          .filter((name): name is string => typeof name === 'string')
+          .map((name) => name.trim())
+          .filter(Boolean)
+      ),
+    ];
+    if (!uniqueNames.length) {
+      return {};
+    }
+    await refreshWindowsPathCache();
+    const result: Record<string, string | null> = {};
+    for (const name of uniqueNames) {
+      result[name] = await resolveProgramIcon(name);
+    }
+    return result;
+  });
 }
 
 const installExtensions = async () => {
@@ -315,9 +434,9 @@ const createWindow = async () => {
   const isWindows = process.platform === 'win32';
   const mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
-    minWidth: 600,
+    width: 1200,
+    height: 820,
+    minWidth: 760,
     icon: getAssetPath('icon.png'),
     frame: !isWindows,
     titleBarStyle: isWindows ? 'hidden' : 'default',
@@ -434,8 +553,10 @@ function setTray(win: BrowserWindow) {
 async function start() {
   await app.whenReady();
   await DB.sync();
+  await loadForegroundPrograms();
   const win = await createWindow();
   setTray(win);
+  detectActive();
 }
 
 function detectActive() {
@@ -461,6 +582,7 @@ function detectActive() {
     program: string,
     seconds: number
   ) => {
+    trackForegroundProgram(program);
     const scopes = [
       { scope: 'day', timestamp: getCurDay(now) },
       { scope: 'minute', timestamp: getCurMinute(now) },
@@ -483,20 +605,36 @@ function detectActive() {
     activeProgram: string,
     seconds: number
   ) => {
+    if (!foregroundProgramCache.size) {
+      return;
+    }
     const runningPrograms = await listRunningProcessNames();
     if (!runningPrograms.length) {
       return;
     }
-    const activeKey = activeProgram.trim().toLowerCase();
-    const uniquePrograms = new Set(
-      runningPrograms.map((name) => name.trim()).filter(Boolean)
-    );
-    const targets = [...uniquePrograms].filter((name) => {
-      if (!activeKey) {
-        return true;
+    const activeKey = normalizeProgramName(activeProgram);
+    const uniquePrograms = new Map<string, string>();
+    runningPrograms.forEach((name) => {
+      const trimmed = name.trim();
+      const normalized = normalizeProgramName(trimmed);
+      if (!normalized) {
+        return;
       }
-      return name.toLowerCase() !== activeKey;
+      if (!uniquePrograms.has(normalized)) {
+        uniquePrograms.set(normalized, trimmed);
+      }
     });
+    const targets = [...uniquePrograms.entries()]
+      .filter(([normalized]) => {
+        if (!foregroundProgramCache.has(normalized)) {
+          return false;
+        }
+        if (!activeKey) {
+          return true;
+        }
+        return normalized !== activeKey;
+      })
+      .map(([, name]) => name);
     if (!targets.length) {
       return;
     }
@@ -530,8 +668,7 @@ function detectActive() {
         cleanEvent();
         return;
       }
-      const program = autoDecodeText(activeWindowsInfo.windowClass) ?? '';
-      const title = autoDecodeText(activeWindowsInfo.windowName) ?? '';
+      const { program, title } = resolveActiveWindowInfo(activeWindowsInfo);
       const seconds = settings.checkInterval;
       if (program) {
         await updateForeground(now, program, seconds);
@@ -577,7 +714,8 @@ function detectActive() {
   uIOhook?.on?.('wheel', () => {
     event.set('read', (event.get('read') ?? 0) + 1);
   });
-  uIOhook?.start?.();
+  if (settings.recording) {
+    uIOhook?.start?.();
+  }
 }
-detectActive();
 start().catch(console.log);

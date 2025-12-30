@@ -45,6 +45,46 @@
     </section>
 
     <section class="panel">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-semibold">Sampling Interval</h2>
+          <p class="text-xs text-muted">
+            Sync data collection and refresh cadence.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input
+            v-model.number="intervalInput"
+            type="number"
+            :min="MIN_CHECK_INTERVAL"
+            :max="MAX_CHECK_INTERVAL"
+            step="1"
+            class="h-9 w-20 rounded-md border border-muted bg-transparent px-2 text-xs text-right"
+          />
+          <span class="text-xs text-muted">s</span>
+          <UButton size="xs" color="neutral" variant="solid" @click="applyInterval">
+            Apply
+          </UButton>
+        </div>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <UButton
+          v-for="preset in intervalPresets"
+          :key="preset"
+          size="xs"
+          color="neutral"
+          :variant="intervalInput === preset ? 'solid' : 'ghost'"
+          @click="applyPreset(preset)"
+        >
+          {{ preset }}s
+        </UButton>
+        <span class="text-[11px] text-muted">
+          Range {{ MIN_CHECK_INTERVAL }}-{{ MAX_CHECK_INTERVAL }}s
+        </span>
+      </div>
+    </section>
+
+    <section class="panel">
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold">Auto Start</h2>
@@ -110,8 +150,9 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useElectron } from '@/composables/useElectron';
+import { useCheckInterval } from '@/composables/useCheckInterval';
 
 type LoginItemSettings = {
   executableWillLaunchAtLogin: boolean;
@@ -132,6 +173,11 @@ const electron = useElectron();
 const loginSettings = ref<LoginItemSettings | null>(null);
 const showModal = ref(false);
 let stopListener: (() => void) | undefined;
+const { checkInterval, setCheckInterval } = useCheckInterval();
+const MIN_CHECK_INTERVAL = 1;
+const MAX_CHECK_INTERVAL = 60;
+const intervalPresets = [1, 2, 5, 10, 15];
+const intervalInput = ref(checkInterval.value);
 
 const setAutoStart = async (value: boolean) => {
   if (!electron) {
@@ -148,6 +194,19 @@ const confirmWipe = async () => {
   showModal.value = false;
 };
 
+const applyInterval = async () => {
+  await setCheckInterval(intervalInput.value);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('checkInterval', String(checkInterval.value));
+  }
+  intervalInput.value = checkInterval.value;
+};
+
+const applyPreset = async (value: number) => {
+  intervalInput.value = value;
+  await applyInterval();
+};
+
 onMounted(async () => {
   if (!electron) {
     return;
@@ -156,6 +215,10 @@ onMounted(async () => {
   stopListener = electron.on('login-item-setting-changed', (val) => {
     loginSettings.value = val as LoginItemSettings;
   });
+});
+
+watch(checkInterval, (value) => {
+  intervalInput.value = value;
 });
 
 onBeforeUnmount(() => {

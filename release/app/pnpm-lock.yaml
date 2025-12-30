@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@jannchie/active-window':
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^1.0.2
+        version: 1.0.2
       better-sqlite3:
         specifier: ^12.5.0
         version: 12.5.0
@@ -23,8 +23,8 @@ importers:
 
 packages:
 
-  '@jannchie/active-window@1.0.1':
-    resolution: {integrity: sha512-OA7Aco5XoOZYtBuaagxKMT4SHyulEtly6F9/YKFNmXAxvse4uINBy0BaRTlPJIqi4sS6CvsnQc5STpvqnMOBDA==}
+  '@jannchie/active-window@1.0.2':
+    resolution: {integrity: sha512-Dhn146snukJ9cw1zZZLsaJfItkbcCHQ2Rj58ONnF30ugGzIGyzmfYTkkUbtUQf/ChTPifeRjs5C1cSx7dlizMg==}
 
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
@@ -263,7 +263,7 @@ packages:
 
 snapshots:
 
-  '@jannchie/active-window@1.0.1':
+  '@jannchie/active-window@1.0.2':
     dependencies:
       fs: 0.0.1-security
       node-addon-api: 1.7.2

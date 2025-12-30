@@ -44,59 +44,7 @@ const ENCODING_CANDIDATES = [
   'windows-1252',
 ] as const;
 
-const MOJIBAKE_MARKERS = new Set([0xfffd, 0x00c3, 0x00c2, 0x00e2]);
-
-function isCjk(code: number) {
-  return (
-    (code >= 0x4e00 && code <= 0x9fff) ||
-    (code >= 0x3400 && code <= 0x4dbf) ||
-    (code >= 0x3040 && code <= 0x30ff) ||
-    (code >= 0xac00 && code <= 0xd7af)
-  );
-}
-
-function scoreText(text: string) {
-  let score = 0;
-  for (const ch of text) {
-    const code = ch.charCodeAt(0);
-    if (code === 0xfffd) {
-      score -= 3;
-      continue;
-    }
-    if (code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) {
-      score -= 2;
-      continue;
-    }
-    if (isCjk(code)) {
-      score += 2;
-      continue;
-    }
-    if (
-      (code >= 0x30 && code <= 0x39) ||
-      (code >= 0x41 && code <= 0x5a) ||
-      (code >= 0x61 && code <= 0x7a)
-    ) {
-      score += 1;
-      continue;
-    }
-    if (code >= 0x80 && code <= 0xff) {
-      score += 0.1;
-      continue;
-    }
-    if (' _-.,:;()[]{}\'"/\\|@#%&+*'.includes(ch)) {
-      score += 0.2;
-      continue;
-    }
-    score += 0.3;
-  }
-  let markerCount = 0;
-  for (const ch of text) {
-    if (MOJIBAKE_MARKERS.has(ch.charCodeAt(0))) {
-      markerCount += 1;
-    }
-  }
-  return score - markerCount * 0.5;
-}
+const MOJIBAKE_MARKERS = ['Ã', 'Â', 'â'];
 
 function decodeWithEncoding(bytes: Buffer, encoding: string) {
   if (encoding === 'utf8') {
@@ -105,14 +53,53 @@ function decodeWithEncoding(bytes: Buffer, encoding: string) {
   return iconv.decode(bytes, encoding);
 }
 
+function looksUtf16Le(bytes: Buffer) {
+  if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe) {
+    return true;
+  }
+  let evenZeros = 0;
+  let oddZeros = 0;
+  const sampleSize = Math.min(bytes.length, 64);
+  for (let i = 0; i < sampleSize; i += 1) {
+    if (bytes[i] === 0) {
+      if (i % 2 === 0) {
+        evenZeros += 1;
+      } else {
+        oddZeros += 1;
+      }
+    }
+  }
+  return oddZeros > evenZeros * 2 && oddZeros > 2;
+}
+
+function countBadChars(text: string) {
+  let penalty = 0;
+  for (const ch of text) {
+    const code = ch.charCodeAt(0);
+    if (code === 0xfffd) {
+      penalty += 3;
+      continue;
+    }
+    if (code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) {
+      penalty += 1;
+    }
+  }
+  for (const marker of MOJIBAKE_MARKERS) {
+    if (text.includes(marker)) {
+      penalty += 1;
+    }
+  }
+  return penalty;
+}
+
 function chooseBestDecoded(bytes: Buffer, original: string) {
   let bestText = original;
-  let bestScore = scoreText(original);
+  let bestPenalty = countBadChars(original);
   for (const encoding of ENCODING_CANDIDATES) {
     const decoded = decodeWithEncoding(bytes, encoding);
-    const score = scoreText(decoded);
-    if (score > bestScore + 0.5) {
-      bestScore = score;
+    const penalty = countBadChars(decoded);
+    if (penalty < bestPenalty) {
+      bestPenalty = penalty;
       bestText = decoded;
     }
   }
@@ -124,6 +111,9 @@ export function autoDecodeText(value: unknown) {
     return undefined;
   }
   if (Buffer.isBuffer(value)) {
+    if (looksUtf16Le(value)) {
+      return decodeWithEncoding(value, 'utf16le').replace(/^\uFEFF/, '');
+    }
     return chooseBestDecoded(value, decodeWithEncoding(value, 'utf8'));
   }
   if (typeof value !== 'string') {

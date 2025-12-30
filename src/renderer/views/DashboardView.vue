@@ -185,34 +185,6 @@
             </div>
           </div>
         </div>
-        <div class="mt-4 space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold">Running Processes</h3>
-            <span class="text-xs text-muted">Top 6</span>
-          </div>
-          <div v-if="topProcesses.length" class="space-y-2">
-            <div
-              v-for="process in topProcesses"
-              :key="process.name"
-              class="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-xs"
-            >
-              <div class="min-w-0">
-                <div class="truncate font-medium">
-                  {{ process.name }}
-                </div>
-                <div class="text-[11px] text-muted">
-                  {{ process.count }} running
-                </div>
-              </div>
-              <span class="text-muted">
-                {{ formatDuration(process.seconds) }}
-              </span>
-            </div>
-          </div>
-          <div v-else class="text-xs text-muted">
-            {{ loadingProcesses ? 'Reading process list...' : 'No process data.' }}
-          </div>
-        </div>
       </div>
     </section>
 
@@ -224,9 +196,9 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { useIntervalFn } from '@vueuse/core';
 import { formatDuration, formatTimestamp } from '@/utils/format';
 import { useElectron } from '@/composables/useElectron';
+import { useCheckInterval } from '@/composables/useCheckInterval';
 
 type ActivityRecord = {
   id?: string | number;
@@ -249,13 +221,8 @@ type BackgroundRecord = {
   seconds?: number;
 };
 
-type ProcessStat = {
-  name: string;
-  seconds: number;
-  count: number;
-};
-
 const electron = useElectron();
+const { checkInterval } = useCheckInterval();
 
 const ranges = [
   {
@@ -288,8 +255,6 @@ const foregroundRecords = ref<ForegroundRecord[]>([]);
 const loadingForeground = ref(false);
 const backgroundRecords = ref<BackgroundRecord[]>([]);
 const loadingBackground = ref(false);
-const processes = ref<ProcessStat[]>([]);
-const loadingProcesses = ref(false);
 
 const refresh = async () => {
   if (!electron) {
@@ -355,22 +320,6 @@ const refreshBackground = async () => {
   }
 };
 
-const refreshProcesses = async () => {
-  if (!electron) {
-    processes.value = [];
-    return;
-  }
-  loadingProcesses.value = true;
-  try {
-    const data = await electron.invoke('get-running-processes');
-    processes.value = Array.isArray(data) ? data : [];
-  } catch {
-    processes.value = [];
-  } finally {
-    loadingProcesses.value = false;
-  }
-};
-
 const setRange = (range: (typeof ranges)[number]) => {
   activeRange.value = range;
 };
@@ -378,11 +327,14 @@ const setRange = (range: (typeof ranges)[number]) => {
 watch(
   () => activeRange.value.key,
   () => {
-    refresh();
-    refreshForeground();
-    refreshBackground();
+    refreshAll();
   }
 );
+
+watch(checkInterval, () => {
+  refreshAll();
+  startInterval();
+});
 
 const totalSeconds = computed(() =>
   records.value.reduce((sum, record) => sum + (record.seconds ?? 0), 0)
@@ -484,38 +436,35 @@ const recentRecords = computed(() =>
     .slice(0, 6)
 );
 
-const topProcesses = computed(() =>
-  [...processes.value]
-    .sort((a, b) => (b.seconds ?? 0) - (a.seconds ?? 0))
-    .slice(0, 6)
-);
+let intervalId: ReturnType<typeof setInterval> | null = null;
 
-const interval = useIntervalFn(refresh, 5000, { immediate: false });
-const foregroundInterval = useIntervalFn(refreshForeground, 5000, {
-  immediate: false,
-});
-const backgroundInterval = useIntervalFn(refreshBackground, 5000, {
-  immediate: false,
-});
-const processInterval = useIntervalFn(refreshProcesses, 10000, {
-  immediate: false,
-});
+const refreshAll = () => {
+  refresh();
+  refreshForeground();
+  refreshBackground();
+};
+
+const startInterval = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+  const delay = Math.max(1, checkInterval.value) * 1000;
+  intervalId = setInterval(refreshAll, delay);
+};
+
+const stopInterval = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+};
 
 onMounted(() => {
-  refresh();
-  interval.resume();
-  refreshForeground();
-  foregroundInterval.resume();
-  refreshBackground();
-  backgroundInterval.resume();
-  refreshProcesses();
-  processInterval.resume();
+  refreshAll();
+  startInterval();
 });
 
 onBeforeUnmount(() => {
-  interval.pause();
-  foregroundInterval.pause();
-  backgroundInterval.pause();
-  processInterval.pause();
+  stopInterval();
 });
 </script>

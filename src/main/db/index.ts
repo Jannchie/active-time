@@ -455,6 +455,23 @@ class DB {
       timestamp: new Date(normalizeTimestampOutput(record.timestamp) + offset),
     }));
   }
+
+  static async listForegroundPrograms() {
+    const rows = sqlite
+      .prepare(
+        `
+        SELECT DISTINCT program FROM foreground_minute_records
+        UNION
+        SELECT DISTINCT program FROM foreground_hourly_records
+        UNION
+        SELECT DISTINCT program FROM foreground_daily_records
+      `
+      )
+      .all() as { program: string | null }[];
+    return rows
+      .map((row) => String(row.program ?? '').trim())
+      .filter(Boolean);
+  }
 }
 
 export { DB };

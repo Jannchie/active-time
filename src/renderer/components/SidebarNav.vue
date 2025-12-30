@@ -23,6 +23,7 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>();
 
 const items = [
   { key: 'dashboard', icon: 'i-lucide-activity', label: 'Dashboard' },
+  { key: 'processes', icon: 'i-lucide-app-window', label: 'Processes' },
   { key: 'settings', icon: 'i-lucide-sliders-horizontal', label: 'Settings' },
   { key: 'about', icon: 'i-lucide-info', label: 'About' },
 ];

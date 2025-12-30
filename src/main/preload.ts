@@ -19,11 +19,14 @@ export type Channels =
   | 'get-background-minutes-records'
   | 'get-active-window'
   | 'set-titlebar-theme'
-  | 'get-running-processes'
   | 'set-login-settings'
   | 'get-login-item-settings'
   | 'login-item-setting-changed'
-  | 'recording-changed';
+  | 'recording-changed'
+  | 'get-check-interval'
+  | 'set-check-interval'
+  | 'check-interval-changed'
+  | 'get-program-icons';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
