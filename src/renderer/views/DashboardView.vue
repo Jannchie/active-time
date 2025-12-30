@@ -3,7 +3,7 @@
     <section class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-xl font-semibold">Activity Pulse</h1>
-        <p class="text-sm text-[var(--app-muted)]">
+        <p class="text-sm text-muted">
           Snapshot your focus sessions without the charts.
         </p>
       </div>
@@ -24,35 +24,35 @@
 
     <section class="grid gap-3 lg:grid-cols-3">
       <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-[var(--app-muted)]">
+        <div class="text-xs uppercase tracking-[0.2em] text-muted">
           Total Focus
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ formatDuration(totalSeconds) }}
         </div>
-        <div class="text-xs text-[var(--app-muted)] mt-1">
+        <div class="text-xs text-muted mt-1">
           {{ activeRange.caption }}
         </div>
       </div>
       <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-[var(--app-muted)]">
+        <div class="text-xs uppercase tracking-[0.2em] text-muted">
           Unique Apps
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ uniquePrograms }}
         </div>
-        <div class="text-xs text-[var(--app-muted)] mt-1">
+        <div class="text-xs text-muted mt-1">
           Across {{ uniqueTitles }} window titles.
         </div>
       </div>
       <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-[var(--app-muted)]">
+        <div class="text-xs uppercase tracking-[0.2em] text-muted">
           Dominant Task
         </div>
         <div class="text-lg font-semibold mt-2">
           {{ topProgram?.name || '--' }}
         </div>
-        <div class="text-xs text-[var(--app-muted)] mt-1">
+        <div class="text-xs text-muted mt-1">
           {{ topProgram ? formatDuration(topProgram.seconds) : 'No records yet.' }}
         </div>
       </div>
@@ -63,7 +63,7 @@
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-lg font-semibold">Top Applications</h2>
-            <p class="text-xs text-[var(--app-muted)]">
+            <p class="text-xs text-muted">
               Ranked by total active time.
             </p>
           </div>
@@ -73,7 +73,7 @@
           <div v-for="item in topPrograms" :key="item.name" class="space-y-1">
             <div class="flex items-center justify-between text-sm">
               <span class="font-medium">{{ item.name }}</span>
-              <span class="text-[var(--app-muted)]">
+              <span class="text-muted">
                 {{ formatDuration(item.seconds) }}
               </span>
             </div>
@@ -87,7 +87,7 @@
         </div>
         <div
           v-else
-          class="mt-5 flex flex-col items-center gap-2 text-sm text-[var(--app-muted)]"
+          class="mt-5 flex flex-col items-center gap-2 text-sm text-muted"
         >
           <UIcon name="i-lucide-moon-star" class="h-6 w-6" />
           Collecting fresh activity records...
@@ -95,7 +95,7 @@
         <div class="mt-4 space-y-2">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-semibold">Foreground Time</h3>
-            <span class="text-xs text-[var(--app-muted)]">Top 6</span>
+            <span class="text-xs text-muted">Top 6</span>
           </div>
           <div v-if="topForegroundPrograms.length" class="space-y-2">
             <div
@@ -105,7 +105,7 @@
             >
               <div class="flex items-center justify-between text-sm">
                 <span class="font-medium">{{ item.name }}</span>
-                <span class="text-[var(--app-muted)]">
+                <span class="text-muted">
                   {{ formatDuration(item.seconds) }}
                 </span>
               </div>
@@ -117,11 +117,44 @@
               />
             </div>
           </div>
-          <div v-else class="text-xs text-[var(--app-muted)]">
+          <div v-else class="text-xs text-muted">
             {{
               loadingForeground
                 ? 'Reading foreground time...'
                 : 'No foreground data.'
+            }}
+          </div>
+        </div>
+        <div class="mt-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Background Time</h3>
+            <span class="text-xs text-muted">Top 6</span>
+          </div>
+          <div v-if="topBackgroundPrograms.length" class="space-y-2">
+            <div
+              v-for="item in topBackgroundPrograms"
+              :key="item.name"
+              class="space-y-1"
+            >
+              <div class="flex items-center justify-between text-sm">
+                <span class="font-medium">{{ item.name }}</span>
+                <span class="text-muted">
+                  {{ formatDuration(item.seconds) }}
+                </span>
+              </div>
+              <UProgress
+                :model-value="item.percent"
+                :max="100"
+                color="neutral"
+                size="2xs"
+              />
+            </div>
+          </div>
+          <div v-else class="text-xs text-muted">
+            {{
+              loadingBackground
+                ? 'Reading background time...'
+                : 'No background data.'
             }}
           </div>
         </div>
@@ -136,21 +169,18 @@
           <div
             v-for="(record, index) in recentRecords"
             :key="record.id ?? `${record.timestamp}-${index}`"
-            class="rounded-lg px-3 py-2 text-xs"
-            :style="{
-              background: 'var(--app-surface-soft)',
-            }"
+            class="rounded-lg bg-muted px-3 py-2 text-xs"
           >
             <div class="flex items-center justify-between">
               <span class="font-semibold">{{ record.program || 'Unknown' }}</span>
-              <span class="text-[var(--app-muted)]">
+              <span class="text-muted">
                 {{ formatDuration(record.seconds) }}
               </span>
             </div>
-            <div class="text-[var(--app-muted)] mt-1 break-words">
+            <div class="text-muted mt-1 break-words">
               {{ record.title || 'Untitled window' }}
             </div>
-            <div class="text-[var(--app-muted)] mt-1">
+            <div class="text-muted mt-1">
               {{ formatTimestamp(record.timestamp) }}
             </div>
           </div>
@@ -158,36 +188,35 @@
         <div class="mt-4 space-y-2">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-semibold">Running Processes</h3>
-            <span class="text-xs text-[var(--app-muted)]">Top 6</span>
+            <span class="text-xs text-muted">Top 6</span>
           </div>
           <div v-if="topProcesses.length" class="space-y-2">
             <div
               v-for="process in topProcesses"
               :key="process.name"
-              class="flex items-center justify-between rounded-lg px-3 py-2 text-xs"
-              :style="{ background: 'var(--app-surface-soft)' }"
+              class="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-xs"
             >
               <div class="min-w-0">
                 <div class="truncate font-medium">
                   {{ process.name }}
                 </div>
-                <div class="text-[11px] text-[var(--app-muted)]">
+                <div class="text-[11px] text-muted">
                   {{ process.count }} running
                 </div>
               </div>
-              <span class="text-[var(--app-muted)]">
+              <span class="text-muted">
                 {{ formatDuration(process.seconds) }}
               </span>
             </div>
           </div>
-          <div v-else class="text-xs text-[var(--app-muted)]">
+          <div v-else class="text-xs text-muted">
             {{ loadingProcesses ? 'Reading process list...' : 'No process data.' }}
           </div>
         </div>
       </div>
     </section>
 
-    <section v-if="loading" class="text-sm text-[var(--app-muted)]">
+    <section v-if="loading" class="text-sm text-muted">
       Syncing latest records...
     </section>
   </div>
@@ -209,6 +238,12 @@ type ActivityRecord = {
 };
 
 type ForegroundRecord = {
+  program?: string;
+  timestamp?: string | number | Date;
+  seconds?: number;
+};
+
+type BackgroundRecord = {
   program?: string;
   timestamp?: string | number | Date;
   seconds?: number;
@@ -251,6 +286,8 @@ const records = ref<ActivityRecord[]>([]);
 const loading = ref(false);
 const foregroundRecords = ref<ForegroundRecord[]>([]);
 const loadingForeground = ref(false);
+const backgroundRecords = ref<BackgroundRecord[]>([]);
+const loadingBackground = ref(false);
 const processes = ref<ProcessStat[]>([]);
 const loadingProcesses = ref(false);
 
@@ -278,6 +315,12 @@ const foregroundChannels = {
   day: 'get-foreground-days-records',
 } as const;
 
+const backgroundChannels = {
+  minute: 'get-background-minutes-records',
+  hour: 'get-background-hours-records',
+  day: 'get-background-days-records',
+} as const;
+
 const refreshForeground = async () => {
   if (!electron) {
     foregroundRecords.value = [];
@@ -292,6 +335,23 @@ const refreshForeground = async () => {
     foregroundRecords.value = [];
   } finally {
     loadingForeground.value = false;
+  }
+};
+
+const refreshBackground = async () => {
+  if (!electron) {
+    backgroundRecords.value = [];
+    return;
+  }
+  loadingBackground.value = true;
+  try {
+    const channel = backgroundChannels[activeRange.value.key];
+    const data = await electron.invoke(channel, activeRange.value.duration);
+    backgroundRecords.value = Array.isArray(data) ? data : [];
+  } catch {
+    backgroundRecords.value = [];
+  } finally {
+    loadingBackground.value = false;
   }
 };
 
@@ -320,6 +380,7 @@ watch(
   () => {
     refresh();
     refreshForeground();
+    refreshBackground();
   }
 );
 
@@ -386,6 +447,31 @@ const topForegroundPrograms = computed(() => {
     .slice(0, 6);
 });
 
+const topBackgroundPrograms = computed(() => {
+  const totals = new Map<string, number>();
+  backgroundRecords.value.forEach((record) => {
+    if (!record.program) {
+      return;
+    }
+    totals.set(
+      record.program,
+      (totals.get(record.program) ?? 0) + (record.seconds ?? 0)
+    );
+  });
+  const rangeSeconds = Math.max(
+    1,
+    Math.floor(activeRange.value.duration / 1000)
+  );
+  return Array.from(totals.entries())
+    .map(([name, seconds]) => ({
+      name,
+      seconds,
+      percent: Math.min(100, Math.round((seconds / rangeSeconds) * 100)),
+    }))
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, 6);
+});
+
 const topProgram = computed(() => topPrograms.value[0]);
 
 const recentRecords = computed(() =>
@@ -408,6 +494,9 @@ const interval = useIntervalFn(refresh, 5000, { immediate: false });
 const foregroundInterval = useIntervalFn(refreshForeground, 5000, {
   immediate: false,
 });
+const backgroundInterval = useIntervalFn(refreshBackground, 5000, {
+  immediate: false,
+});
 const processInterval = useIntervalFn(refreshProcesses, 10000, {
   immediate: false,
 });
@@ -417,6 +506,8 @@ onMounted(() => {
   interval.resume();
   refreshForeground();
   foregroundInterval.resume();
+  refreshBackground();
+  backgroundInterval.resume();
   refreshProcesses();
   processInterval.resume();
 });
@@ -424,6 +515,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   interval.pause();
   foregroundInterval.pause();
+  backgroundInterval.pause();
   processInterval.pause();
 });
 </script>

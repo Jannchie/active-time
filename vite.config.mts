@@ -9,7 +9,45 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: path.resolve(rootDir, 'src/renderer'),
-  plugins: [vue(), ui({ router: false })],
+  plugins: [
+    vue(),
+    ui({
+      router: false,
+      ui: {
+        colors: {
+          neutral: 'zinc',
+        },
+        select: {
+          defaultVariants: {
+            variant: 'soft',
+          },
+        },
+        selectMenu: {
+          slots: {
+            base: 'min-w-45.75',
+          },
+          defaultVariants: {
+            variant: 'soft',
+          },
+        },
+        input: {
+          defaultVariants: {
+            variant: 'soft',
+          },
+        },
+        textarea: {
+          defaultVariants: {
+            variant: 'soft',
+          },
+        },
+        card: {
+          defaultVariants: {
+            variant: 'soft',
+          },
+        },
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(rootDir, 'src/renderer'),

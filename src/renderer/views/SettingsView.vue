@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <section>
       <h1 class="text-xl font-semibold">Studio Settings</h1>
-      <p class="text-sm text-[var(--app-muted)]">
+      <p class="text-sm text-muted">
         Tune the workspace ambience and startup behavior.
       </p>
     </section>
@@ -11,7 +11,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold">Theme</h2>
-          <p class="text-xs text-[var(--app-muted)]">
+          <p class="text-xs text-muted">
             Pick a mood for the dashboard.
           </p>
         </div>
@@ -48,7 +48,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold">Auto Start</h2>
-          <p class="text-xs text-[var(--app-muted)]">
+          <p class="text-xs text-muted">
             Launch Active Time when your system boots.
           </p>
         </div>
@@ -76,8 +76,8 @@
     <section class="panel">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold text-[var(--app-text)]">Danger Zone</h2>
-          <p class="text-xs text-[var(--app-muted)]">
+          <h2 class="text-lg font-semibold">Danger Zone</h2>
+          <p class="text-xs text-muted">
             Reset all locally stored activity data.
           </p>
         </div>
@@ -90,13 +90,10 @@
     <UModal v-model="showModal">
       <div class="panel space-y-3">
         <div class="flex items-center gap-2">
-          <UIcon
-            name="i-lucide-triangle-alert"
-            class="h-5 w-5 text-[var(--app-text)]"
-          />
+          <UIcon name="i-lucide-triangle-alert" class="h-5 w-5" />
           <h3 class="text-lg font-semibold">Delete all data?</h3>
         </div>
-        <div class="text-sm text-[var(--app-muted)]">
+        <div class="text-sm text-muted">
           This will permanently remove every activity record stored on this device.
         </div>
         <div class="flex justify-end gap-2">

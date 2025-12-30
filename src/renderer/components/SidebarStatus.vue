@@ -2,34 +2,32 @@
   <div class="flex flex-col gap-2">
     <div
       v-if="!collapsed"
-      class="text-[10px] uppercase tracking-[0.3em] text-[var(--app-muted)]"
+      class="text-[10px] uppercase tracking-[0.3em] text-muted"
     >
       Active App
     </div>
     <div class="flex items-center gap-2 text-xs">
       <div
-        class="h-2 w-2 rounded-full"
-        :style="{
-          background: status.available ? 'var(--app-text)' : 'var(--app-border)',
-        }"
+        class="h-2 w-2 rounded-full bg-current"
+        :class="status.available ? 'opacity-100' : 'opacity-40'"
       />
       <div v-if="!collapsed" class="min-w-0 flex-1">
         <div class="truncate font-medium">
           {{ statusLabel }}
         </div>
-        <div class="truncate text-[11px] text-[var(--app-muted)]">
+        <div class="truncate text-[11px] text-muted">
           {{ timeLabel }}
         </div>
       </div>
       <UIcon
         v-else
         name="i-lucide-activity"
-        class="h-4 w-4 text-[var(--app-muted)]"
+        class="h-4 w-4 text-muted"
       />
     </div>
     <div
       v-if="!collapsed"
-      class="text-[9px] uppercase tracking-[0.3em] text-[var(--app-muted)]"
+      class="text-[9px] uppercase tracking-[0.3em] text-muted"
     >
       v0.3
     </div>

@@ -6,17 +6,13 @@
           <div class="flex w-full items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <div
-                class="flex h-7 w-7 items-center justify-center rounded-md border text-[var(--app-text)]"
-                :style="{
-                  background: 'var(--app-surface-soft)',
-                  borderColor: 'var(--app-border)',
-                }"
+                class="flex h-7 w-7 items-center justify-center rounded-md border bg-muted"
               >
                 <UIcon name="i-lucide-timer" class="h-4 w-4" />
               </div>
               <div
                 v-if="!collapsed"
-                class="text-[10px] uppercase tracking-[0.3em] text-[var(--app-muted)]"
+                class="text-[10px] uppercase tracking-[0.3em] text-muted"
               >
                 Active Time
               </div>

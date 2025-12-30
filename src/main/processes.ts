@@ -106,6 +106,34 @@ const listWindows = async (): Promise<ProcessEntry[]> => {
     );
 };
 
+const parseTasklistNames = (stdout: string) => {
+  return stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      if (line.startsWith('"')) {
+        const trimmed = line.length >= 2 ? line.slice(1, -1) : line;
+        const [name] = trimmed.split('","');
+        return name;
+      }
+      return line.split(/\s+/)[0];
+    })
+    .filter(Boolean);
+};
+
+const listWindowsNames = async (): Promise<string[]> => {
+  const { stdout } = await execFileAsync(
+    'tasklist',
+    ['/FO', 'CSV', '/NH'],
+    {
+      encoding: 'utf8',
+      windowsHide: true,
+    }
+  );
+  return parseTasklistNames(stdout);
+};
+
 const parsePsSeconds = (stdout: string) => {
   return stdout
     .split(/\r?\n/)
@@ -164,6 +192,20 @@ const listDarwin = async (): Promise<ProcessEntry[]> => {
   return parsePsEtime(stdout);
 };
 
+const listUnixNames = async (): Promise<string[]> => {
+  const { stdout } = await execFileAsync('ps', ['-A', '-o', 'comm='], {
+    encoding: 'utf8',
+  });
+  return stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+};
+
+const listDarwinNames = async (): Promise<string[]> => {
+  return listUnixNames();
+};
+
 const aggregateStats = (entries: ProcessEntry[]): ProcessStats[] => {
   const totals = new Map<string, ProcessStats>();
   for (const entry of entries) {
@@ -194,6 +236,22 @@ export const listRunningProcessStats = async (): Promise<ProcessStats[]> => {
       return aggregateStats(await listDarwin());
     }
     return aggregateStats(await listUnix());
+  } catch {
+    return [];
+  }
+};
+
+export const listRunningProcessNames = async (): Promise<string[]> => {
+  try {
+    let names: string[];
+    if (process.platform === 'win32') {
+      names = await listWindowsNames();
+    } else if (process.platform === 'darwin') {
+      names = await listDarwinNames();
+    } else {
+      names = await listUnixNames();
+    }
+    return [...new Set(names.map((name) => name.trim()).filter(Boolean))];
   } catch {
     return [];
   }

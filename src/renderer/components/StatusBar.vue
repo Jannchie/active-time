@@ -14,7 +14,7 @@
         Storage {{ formatBytes(storageSize) }}
       </UBadge>
     </div>
-    <div class="text-xs text-[var(--app-muted)]">
+    <div class="text-xs text-muted">
       Focus stays local. Data never leaves this device.
     </div>
   </footer>

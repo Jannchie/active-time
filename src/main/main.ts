@@ -23,7 +23,7 @@ import {
   resolveHtmlPath,
 } from './util';
 import { DB } from './db';
-import { listRunningProcessStats } from './processes';
+import { listRunningProcessNames, listRunningProcessStats } from './processes';
 
 let uIOhook: any = null;
 let activeWindows: any = null;
@@ -199,6 +199,18 @@ function setIpcHandle(win: BrowserWindow) {
 
   ipcMain.handle('get-foreground-days-records', async (_, duration: any) => {
     return DB.getForegroundDailyRecords(duration as number);
+  });
+
+  ipcMain.handle('get-background-minutes-records', async (_, duration: any) => {
+    return DB.getBackgroundMinuteRecords(duration as number);
+  });
+
+  ipcMain.handle('get-background-hours-records', async (_, duration: any) => {
+    return DB.getBackgroundHourlyRecords(duration as number);
+  });
+
+  ipcMain.handle('get-background-days-records', async (_, duration: any) => {
+    return DB.getBackgroundDailyRecords(duration as number);
   });
 
   ipcMain.handle('get-db-file-size', async () => {
@@ -466,6 +478,45 @@ function detectActive() {
     );
   };
 
+  const updateBackground = async (
+    now: Date,
+    activeProgram: string,
+    seconds: number
+  ) => {
+    const runningPrograms = await listRunningProcessNames();
+    if (!runningPrograms.length) {
+      return;
+    }
+    const activeKey = activeProgram.trim().toLowerCase();
+    const uniquePrograms = new Set(
+      runningPrograms.map((name) => name.trim()).filter(Boolean)
+    );
+    const targets = [...uniquePrograms].filter((name) => {
+      if (!activeKey) {
+        return true;
+      }
+      return name.toLowerCase() !== activeKey;
+    });
+    if (!targets.length) {
+      return;
+    }
+    const scopes = [
+      { scope: 'day', timestamp: getCurDay(now) },
+      { scope: 'minute', timestamp: getCurMinute(now) },
+      { scope: 'hour', timestamp: getCurHour(now) },
+    ] as const;
+    for (const programName of targets) {
+      for (const item of scopes) {
+        await DB.incrementBackgroundRecord({
+          scope: item.scope,
+          timestamp: item.timestamp,
+          program: programName,
+          seconds,
+        });
+      }
+    }
+  };
+
   data.timer = setInterval(async () => {
     try {
       if (!settings.recording) {
@@ -485,6 +536,7 @@ function detectActive() {
       if (program) {
         await updateForeground(now, program, seconds);
       }
+      await updateBackground(now, program, seconds);
       if (eventInfo.size > 0) {
         const eventType =
           (eventInfo.get('type') ?? 0) > settings.checkInterval

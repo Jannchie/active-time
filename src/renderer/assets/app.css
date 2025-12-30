@@ -36,29 +36,6 @@
   --font-title-ja:
     'Berkeley Mono', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
   --ui-header-height: 40px;
-  --app-bg: #f3f4f6;
-  --app-accent: #111827;
-  --app-accent-strong: #111827;
-  --app-surface: #ffffff;
-  --app-surface-strong: #f9fafb;
-  --app-surface-soft: #f3f4f6;
-  --app-border: #e5e7eb;
-  --app-text: #111827;
-  --app-muted: #6b7280;
-  --app-shadow: none;
-}
-
-.dark {
-  --app-bg: #0f172a;
-  --app-accent: #f3f4f6;
-  --app-accent-strong: #f3f4f6;
-  --app-surface: #111827;
-  --app-surface-strong: #1f2937;
-  --app-surface-soft: #0b1220;
-  --app-border: #1f2937;
-  --app-text: #f3f4f6;
-  --app-muted: #94a3b8;
-  --app-shadow: none;
 }
 
 *,
@@ -69,17 +46,13 @@
 
 body {
   font-family: var(--font-display-latin);
-  color: var(--app-text);
-  background-color: var(--app-bg);
+  color: var(--ui-text);
+  background-color: var(--ui-bg);
   min-height: 100vh;
 }
 
-.dark body {
-  background-color: var(--app-bg);
-}
-
 .panel {
-  background: var(--app-surface);
+  background: var(--ui-bg-elevated);
   border-radius: 12px;
   padding: 16px;
 }
@@ -93,8 +66,8 @@ body {
 }
 
 .status-bar {
-  border-top: 1px solid var(--app-border);
-  background: var(--app-surface);
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-bg);
 }
 
 ::-webkit-scrollbar {
@@ -102,6 +75,6 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--app-border);
+  background: var(--ui-border);
   border-radius: 999px;
 }

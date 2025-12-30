@@ -3,6 +3,9 @@ import { app } from 'electron';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { and, eq, gte } from 'drizzle-orm';
 import {
+  backgroundDailyRecords,
+  backgroundHourlyRecords,
+  backgroundMinuteRecords,
   dailyRecords,
   foregroundDailyRecords,
   foregroundHourlyRecords,
@@ -26,6 +29,12 @@ const FOREGROUND_TABLES = {
   minute: foregroundMinuteRecords,
 } as const;
 
+const BACKGROUND_TABLES = {
+  day: backgroundDailyRecords,
+  hour: backgroundHourlyRecords,
+  minute: backgroundMinuteRecords,
+} as const;
+
 const TABLE_NAMES = [
   'daily_records',
   'hourly_records',
@@ -33,6 +42,9 @@ const TABLE_NAMES = [
   'foreground_daily_records',
   'foreground_hourly_records',
   'foreground_minute_records',
+  'background_daily_records',
+  'background_hourly_records',
+  'background_minute_records',
 ] as const;
 
 const ensureSchema = () => {
@@ -98,6 +110,36 @@ const ensureSchema = () => {
     );
     CREATE INDEX IF NOT EXISTS foreground_minute_records_timestamp_program_idx
       ON foreground_minute_records (timestamp, program);
+
+    CREATE TABLE IF NOT EXISTS background_daily_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      program TEXT,
+      timestamp INTEGER NOT NULL,
+      seconds INTEGER NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS background_daily_records_timestamp_program_idx
+      ON background_daily_records (timestamp, program);
+
+    CREATE TABLE IF NOT EXISTS background_hourly_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      program TEXT,
+      timestamp INTEGER NOT NULL,
+      seconds INTEGER NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS background_hourly_records_timestamp_program_idx
+      ON background_hourly_records (timestamp, program);
+
+    CREATE TABLE IF NOT EXISTS background_minute_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      program TEXT,
+      timestamp INTEGER NOT NULL,
+      seconds INTEGER NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS background_minute_records_timestamp_program_idx
+      ON background_minute_records (timestamp, program);
   `);
 };
 
@@ -161,6 +203,9 @@ class DB {
       DROP TABLE IF EXISTS foreground_daily_records;
       DROP TABLE IF EXISTS foreground_hourly_records;
       DROP TABLE IF EXISTS foreground_minute_records;
+      DROP TABLE IF EXISTS background_daily_records;
+      DROP TABLE IF EXISTS background_hourly_records;
+      DROP TABLE IF EXISTS background_minute_records;
     `);
     sqlite.exec('VACUUM;');
     ensureSchema();
@@ -228,6 +273,41 @@ class DB {
     seconds: number;
   }) {
     const table = FOREGROUND_TABLES[params.scope];
+    const timestamp = normalizeTimestampInput(params.timestamp);
+    const createdAt = new Date().toISOString();
+    const existing = db
+      .select()
+      .from(table)
+      .where(
+        and(eq(table.timestamp, timestamp), eq(table.program, params.program))
+      )
+      .get();
+    if (existing) {
+      db.update(table)
+        .set({
+          seconds: Number(existing.seconds ?? 0) + params.seconds,
+        })
+        .where(eq(table.id, existing.id))
+        .run();
+      return;
+    }
+    db.insert(table)
+      .values({
+        timestamp,
+        program: params.program,
+        seconds: params.seconds,
+        createdAt,
+      })
+      .run();
+  }
+
+  static async incrementBackgroundRecord(params: {
+    scope: Scope;
+    timestamp: Date | number | string;
+    program: string;
+    seconds: number;
+  }) {
+    const table = BACKGROUND_TABLES[params.scope];
     const timestamp = normalizeTimestampInput(params.timestamp);
     const createdAt = new Date().toISOString();
     const existing = db
@@ -328,6 +408,46 @@ class DB {
       .select()
       .from(foregroundDailyRecords)
       .where(gte(foregroundDailyRecords.timestamp, cutoff))
+      .all();
+    const offset = new Date().getTimezoneOffset() * 60 * 1000;
+    return data.map((record) => ({
+      ...record,
+      timestamp: new Date(normalizeTimestampOutput(record.timestamp) + offset),
+    }));
+  }
+
+  static async getBackgroundMinuteRecords(duration: number) {
+    const cutoff = Date.now() - duration;
+    return db
+      .select()
+      .from(backgroundMinuteRecords)
+      .where(gte(backgroundMinuteRecords.timestamp, cutoff))
+      .all()
+      .map((record) => ({
+        ...record,
+        timestamp: normalizeTimestampOutput(record.timestamp),
+      }));
+  }
+
+  static async getBackgroundHourlyRecords(duration: number) {
+    const cutoff = Date.now() - duration;
+    return db
+      .select()
+      .from(backgroundHourlyRecords)
+      .where(gte(backgroundHourlyRecords.timestamp, cutoff))
+      .all()
+      .map((record) => ({
+        ...record,
+        timestamp: normalizeTimestampOutput(record.timestamp),
+      }));
+  }
+
+  static async getBackgroundDailyRecords(duration: number) {
+    const cutoff = Date.now() - duration;
+    const data = db
+      .select()
+      .from(backgroundDailyRecords)
+      .where(gte(backgroundDailyRecords.timestamp, cutoff))
       .all();
     const offset = new Date().getTimezoneOffset() * 60 * 1000;
     return data.map((record) => ({
