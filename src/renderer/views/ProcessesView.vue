@@ -2,9 +2,9 @@
   <div class="space-y-4">
     <section class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-xl font-semibold">Process Ledger</h1>
+        <h1 class="text-xl font-semibold">App Breakdown</h1>
         <p class="text-sm text-muted">
-          Compare foreground and background time per app.
+          Foreground and background presence per app.
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -22,13 +22,13 @@
       </div>
     </section>
 
-    <section class="grid gap-3 lg:grid-cols-3">
+    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Foreground Total
+          Total Time
         </div>
         <div class="text-2xl font-semibold mt-2">
-          {{ formatDuration(totalForegroundSeconds) }}
+          {{ formatDuration(totalTrackedSeconds) }}
         </div>
         <div class="text-xs text-muted mt-1">
           {{ activeRange.caption }}
@@ -36,13 +36,24 @@
       </div>
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Background Total
+          Foreground Time
+        </div>
+        <div class="text-2xl font-semibold mt-2">
+          {{ formatDuration(totalForegroundSeconds) }}
+        </div>
+        <div class="text-xs text-muted mt-1">
+          Time in front of you.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="text-xs uppercase tracking-[0.2em] text-muted">
+          Background Time
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ formatDuration(totalBackgroundSeconds) }}
         </div>
         <div class="text-xs text-muted mt-1">
-          {{ activeRange.caption }}
+          Running behind the scenes.
         </div>
       </div>
       <div class="panel">
@@ -61,27 +72,31 @@
     <section class="panel">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold">Process Breakdown</h2>
+          <h2 class="text-lg font-semibold">App Detail</h2>
           <p class="text-xs text-muted">
-            Foreground and background totals by app.
+            Totals, split, and last seen per app.
           </p>
         </div>
         <UBadge color="neutral" variant="soft">{{ processRows.length }}</UBadge>
       </div>
       <div v-if="processRows.length" class="mt-4 space-y-2">
         <div
-          class="grid grid-cols-[minmax(0,1fr)_96px_96px] items-center gap-4 text-[11px] uppercase tracking-[0.2em] text-muted"
+          class="grid grid-cols-[minmax(0,1fr)_84px_84px_84px_120px] items-center gap-4 text-[11px] uppercase tracking-[0.2em] text-muted"
         >
           <span>Process</span>
+          <span class="text-right">Total</span>
           <span class="text-right">Foreground</span>
           <span class="text-right">Background</span>
+          <span class="text-right">Last Seen</span>
         </div>
         <div
           v-for="row in processRows"
           :key="row.name"
           class="space-y-2 rounded-lg bg-muted px-3 py-2 text-xs"
         >
-          <div class="grid grid-cols-[minmax(0,1fr)_96px_96px] items-center gap-4">
+          <div
+            class="grid grid-cols-[minmax(0,1fr)_84px_84px_84px_120px] items-center gap-4"
+          >
             <div class="flex min-w-0 items-center gap-2">
               <div
                 class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted/70"
@@ -100,10 +115,16 @@
               <div class="truncate font-medium">{{ row.name }}</div>
             </div>
             <div class="text-right text-muted tabular-nums">
+              {{ formatDuration(row.total) }}
+            </div>
+            <div class="text-right text-muted tabular-nums">
               {{ formatDuration(row.foreground) }}
             </div>
             <div class="text-right text-muted tabular-nums">
               {{ formatDuration(row.background) }}
+            </div>
+            <div class="text-right text-muted tabular-nums">
+              {{ row.lastSeen ? formatTimestamp(row.lastSeen) : '--' }}
             </div>
           </div>
           <UProgress
@@ -130,7 +151,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { formatDuration } from '@/utils/format';
+import { formatDuration, formatTimestamp } from '@/utils/format';
 import { useElectron } from '@/composables/useElectron';
 import { useCheckInterval } from '@/composables/useCheckInterval';
 
@@ -175,7 +196,11 @@ const foregroundRecords = ref<ForegroundRecord[]>([]);
 const backgroundRecords = ref<BackgroundRecord[]>([]);
 const loading = ref(false);
 const iconMap = ref<Record<string, string | null>>({});
+const iconLastAttempt = ref<Record<string, number>>({});
 let iconLookupAvailable = true;
+let iconRetryTimer: ReturnType<typeof setTimeout> | null = null;
+const ICON_RETRY_MS = 5 * 60 * 1000;
+const ICON_FAILURE_BACKOFF_MS = 30 * 1000;
 
 const foregroundChannels = {
   minute: 'get-foreground-minutes-records',
@@ -194,6 +219,7 @@ const refresh = async () => {
     foregroundRecords.value = [];
     backgroundRecords.value = [];
     iconMap.value = {};
+    iconLastAttempt.value = {};
     return;
   }
   loading.value = true;
@@ -229,11 +255,15 @@ const refreshIcons = async (names: string[]) => {
   if (!iconLookupAvailable) {
     return;
   }
+  const now = Date.now();
   const uniqueNames = [
     ...new Set(names.map((name) => name.trim()).filter(Boolean)),
   ];
   const missing = uniqueNames.filter(
-    (name) => iconMap.value[name] === undefined
+    (name) =>
+      iconMap.value[name] === undefined ||
+      (iconMap.value[name] === null &&
+        now - (iconLastAttempt.value[name] ?? 0) > ICON_RETRY_MS)
   );
   if (!missing.length) {
     return;
@@ -243,24 +273,41 @@ const refreshIcons = async (names: string[]) => {
     result = await electron.invoke('get-program-icons', missing);
   } catch {
     iconLookupAvailable = false;
+    if (iconRetryTimer) {
+      clearTimeout(iconRetryTimer);
+    }
+    iconRetryTimer = setTimeout(() => {
+      iconLookupAvailable = true;
+    }, ICON_FAILURE_BACKOFF_MS);
     const next = { ...iconMap.value };
+    const nextAttempts = { ...iconLastAttempt.value };
     missing.forEach((name) => {
       if (next[name] === undefined) {
         next[name] = null;
       }
+      nextAttempts[name] = now;
     });
     iconMap.value = next;
+    iconLastAttempt.value = nextAttempts;
     return;
   }
   if (!result || typeof result !== 'object') {
+    const nextAttempts = { ...iconLastAttempt.value };
+    missing.forEach((name) => {
+      nextAttempts[name] = now;
+    });
+    iconLastAttempt.value = nextAttempts;
     return;
   }
   const next = { ...iconMap.value };
+  const nextAttempts = { ...iconLastAttempt.value };
   const map = result as Record<string, string | null>;
   missing.forEach((name) => {
     next[name] = map[name] ?? null;
+    nextAttempts[name] = now;
   });
   iconMap.value = next;
+  iconLastAttempt.value = nextAttempts;
 };
 
 watch(
@@ -283,6 +330,10 @@ const totalBackgroundSeconds = computed(() =>
   backgroundRecords.value.reduce((sum, record) => sum + (record.seconds ?? 0), 0)
 );
 
+const totalTrackedSeconds = computed(
+  () => totalForegroundSeconds.value + totalBackgroundSeconds.value
+);
+
 const uniquePrograms = computed(() => {
   const programs = new Set<string>();
   foregroundRecords.value.forEach((record) => {
@@ -299,28 +350,42 @@ const uniquePrograms = computed(() => {
 });
 
 const processRows = computed(() => {
-  const totals = new Map<string, { foreground: number; background: number }>();
-  foregroundRecords.value.forEach((record) => {
+  const totals = new Map<
+    string,
+    { foreground: number; background: number; lastSeen: number | null }
+  >();
+  const toTimestamp = (value?: string | number | Date) => {
+    if (value === undefined || value === null) {
+      return null;
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    const time = date.getTime();
+    return Number.isNaN(time) ? null : time;
+  };
+  const applyRecord = (
+    record: ForegroundRecord | BackgroundRecord,
+    key: 'foreground' | 'background'
+  ) => {
     if (!record.program) {
       return;
     }
     const current = totals.get(record.program) ?? {
       foreground: 0,
       background: 0,
+      lastSeen: null,
     };
-    current.foreground += record.seconds ?? 0;
+    current[key] += record.seconds ?? 0;
+    const time = toTimestamp(record.timestamp);
+    if (time !== null) {
+      current.lastSeen = Math.max(current.lastSeen ?? 0, time);
+    }
     totals.set(record.program, current);
+  };
+  foregroundRecords.value.forEach((record) => {
+    applyRecord(record, 'foreground');
   });
   backgroundRecords.value.forEach((record) => {
-    if (!record.program) {
-      return;
-    }
-    const current = totals.get(record.program) ?? {
-      foreground: 0,
-      background: 0,
-    };
-    current.background += record.seconds ?? 0;
-    totals.set(record.program, current);
+    applyRecord(record, 'background');
   });
   return Array.from(totals.entries())
     .map(([name, values]) => {
@@ -332,6 +397,7 @@ const processRows = computed(() => {
         foreground: values.foreground,
         background: values.background,
         total,
+        lastSeen: values.lastSeen,
         foregroundPercent,
       };
     })
@@ -362,5 +428,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopInterval();
+  if (iconRetryTimer) {
+    clearTimeout(iconRetryTimer);
+  }
 });
 </script>

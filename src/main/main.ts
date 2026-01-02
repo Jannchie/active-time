@@ -23,7 +23,11 @@ import {
   resolveHtmlPath,
 } from './util';
 import { DB } from './db';
-import { listRunningProcessNames, listWindowsProcessPaths } from './processes';
+import {
+  getWindowsProcessNameByPid,
+  listRunningProcessNames,
+  listWindowsProcessPaths,
+} from './processes';
 
 let uIOhook: any = null;
 let activeWindows: any = null;
@@ -31,16 +35,62 @@ let activityTrackingUnavailableWarned = false;
 let activeStatusKey = '';
 const activeStatus = {
   program: '',
-  title: '',
   since: 0,
 };
 const foregroundProgramCache = new Set<string>();
+const programLabelCache = new Map<string, string>();
 const programIconCache = new Map<string, string | null>();
 const programPathCache = new Map<string, string>();
+const pidProgramCache = new Map<number, { name: string; cachedAt: number }>();
 const PATH_REFRESH_INTERVAL_MS = 60 * 1000;
+const PID_CACHE_TTL_MS = 5 * 60 * 1000;
 let lastPathRefresh = 0;
 
-const normalizeProgramName = (value: string) => value.trim().toLowerCase();
+const stripProgramExtension = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+  if (process.platform === 'win32') {
+    const lower = trimmed.toLowerCase();
+    if (lower.endsWith('.exe')) {
+      return trimmed.slice(0, -4);
+    }
+  }
+  return trimmed;
+};
+
+const normalizeProgramName = (value: string) =>
+  stripProgramExtension(value).toLowerCase();
+
+const normalizeProgramLabel = (value?: string) => {
+  if (!value) {
+    return '';
+  }
+  return stripProgramExtension(value);
+};
+
+const resolveProgramNameByPid = async (pid?: number) => {
+  if (!pid || pid <= 0 || !Number.isFinite(pid)) {
+    return '';
+  }
+  const cached = pidProgramCache.get(pid);
+  const now = Date.now();
+  if (cached && now - cached.cachedAt < PID_CACHE_TTL_MS) {
+    return cached.name;
+  }
+  if (process.platform !== 'win32') {
+    return '';
+  }
+  try {
+    const name = normalizeProgramLabel(await getWindowsProcessNameByPid(pid));
+    pidProgramCache.set(pid, { name, cachedAt: now });
+    return name;
+  } catch {
+    pidProgramCache.set(pid, { name: '', cachedAt: now });
+    return '';
+  }
+};
 
 const refreshWindowsPathCache = async () => {
   if (process.platform !== 'win32') {
@@ -89,9 +139,14 @@ const resolveProgramIcon = async (programName: string): Promise<string | null> =
 };
 
 const trackForegroundProgram = (program: string) => {
-  const normalized = normalizeProgramName(program);
-  if (normalized) {
-    foregroundProgramCache.add(normalized);
+  const label = normalizeProgramLabel(program);
+  const normalized = normalizeProgramName(label);
+  if (!normalized) {
+    return;
+  }
+  foregroundProgramCache.add(normalized);
+  if (label) {
+    programLabelCache.set(normalized, label);
   }
 };
 
@@ -122,18 +177,25 @@ const getActiveStatus = async () => {
     if (!info) {
       return { available: false };
     }
-    const { program, title } = resolveActiveWindowInfo(info);
-    const key = `${program}::${title}`;
-    if (key && key !== activeStatusKey) {
-      activeStatusKey = key;
+    const { program } = await resolveActiveWindowInfo(info);
+    if (!program) {
+      activeStatusKey = '';
+      activeStatus.program = '';
+      activeStatus.since = 0;
+      return {
+        available: true,
+        program: '',
+        since: 0,
+      };
+    }
+    if (program !== activeStatusKey) {
+      activeStatusKey = program;
       activeStatus.program = program;
-      activeStatus.title = title;
       activeStatus.since = Date.now();
     }
     return {
       available: true,
       program: activeStatus.program,
-      title: activeStatus.title,
       since: activeStatus.since,
     };
   } catch {
@@ -151,10 +213,14 @@ const warnActivityTrackingUnavailable = () => {
   );
 };
 
-const resolveActiveWindowInfo = (info: any) => {
-  const program = autoDecodeText(info?.windowClass) ?? '';
-  const title = autoDecodeText(info?.windowName) ?? '';
-  return { program, title };
+const resolveActiveWindowInfo = async (info: any) => {
+  const pid = Number(info?.windowPid);
+  const fromPid = await resolveProgramNameByPid(pid);
+  if (fromPid) {
+    return { program: fromPid };
+  }
+  const program = normalizeProgramLabel(autoDecodeText(info?.windowClass) ?? '');
+  return { program };
 };
 
 const loadForegroundPrograms = async () => {
@@ -582,7 +648,11 @@ function detectActive() {
     program: string,
     seconds: number
   ) => {
-    trackForegroundProgram(program);
+    const normalizedProgram = normalizeProgramLabel(program);
+    if (!normalizedProgram) {
+      return;
+    }
+    trackForegroundProgram(normalizedProgram);
     const scopes = [
       { scope: 'day', timestamp: getCurDay(now) },
       { scope: 'minute', timestamp: getCurMinute(now) },
@@ -593,7 +663,7 @@ function detectActive() {
         DB.incrementForegroundRecord({
           scope: item.scope,
           timestamp: item.timestamp,
-          program,
+          program: normalizedProgram,
           seconds,
         })
       )
@@ -621,7 +691,11 @@ function detectActive() {
         return;
       }
       if (!uniquePrograms.has(normalized)) {
-        uniquePrograms.set(normalized, trimmed);
+        const label =
+          programLabelCache.get(normalized) ?? normalizeProgramLabel(trimmed);
+        if (label) {
+          uniquePrograms.set(normalized, label);
+        }
       }
     });
     const targets = [...uniquePrograms.entries()]
@@ -634,7 +708,8 @@ function detectActive() {
         }
         return normalized !== activeKey;
       })
-      .map(([, name]) => name);
+      .map(([, name]) => name)
+      .filter(Boolean);
     if (!targets.length) {
       return;
     }
@@ -668,7 +743,7 @@ function detectActive() {
         cleanEvent();
         return;
       }
-      const { program, title } = resolveActiveWindowInfo(activeWindowsInfo);
+      const { program } = await resolveActiveWindowInfo(activeWindowsInfo);
       const seconds = settings.checkInterval;
       if (program) {
         await updateForeground(now, program, seconds);
@@ -684,18 +759,19 @@ function detectActive() {
           { scope: 'minute', timestamp: getCurMinute(now) },
           { scope: 'hour', timestamp: getCurHour(now) },
         ] as const;
-        await Promise.all(
-          scopes.map((item) =>
-            DB.incrementActivityRecord({
-              scope: item.scope,
-              timestamp: item.timestamp,
-              program,
-              title,
-              event: eventType,
-              seconds,
-            })
-          )
-        );
+        if (program) {
+          await Promise.all(
+            scopes.map((item) =>
+              DB.incrementActivityRecord({
+                scope: item.scope,
+                timestamp: item.timestamp,
+                program,
+                event: eventType,
+                seconds,
+              })
+            )
+          );
+        }
         cleanEvent();
       }
     } catch (e) {

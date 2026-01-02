@@ -20,6 +20,11 @@ const parseTasklistNames = (stdout: string) => {
     .filter(Boolean);
 };
 
+const parseTasklistFirstName = (stdout: string) => {
+  const names = parseTasklistNames(stdout);
+  return names[0] ?? '';
+};
+
 const listWindowsNames = async (): Promise<string[]> => {
   const { stdout } = await execFileAsync(
     'tasklist',
@@ -69,6 +74,25 @@ const parseWmicProcessPaths = (stdout: string) => {
   return map;
 };
 
+const parseWmicValue = (stdout: string, keyName: string) => {
+  let result = '';
+  stdout.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      return;
+    }
+    const [keyRaw, ...rest] = trimmed.split('=');
+    if (!keyRaw) {
+      return;
+    }
+    const key = keyRaw.trim().toLowerCase();
+    if (key === keyName.toLowerCase()) {
+      result = rest.join('=').trim();
+    }
+  });
+  return result;
+};
+
 export const listWindowsProcessPaths = async (): Promise<Map<string, string>> => {
   const { stdout } = await execFileAsync(
     'wmic',
@@ -83,6 +107,50 @@ export const listWindowsProcessPaths = async (): Promise<Map<string, string>> =>
     return new Map();
   }
   return parseWmicProcessPaths(decoded);
+};
+
+export const getWindowsProcessNameByPid = async (
+  pid: number
+): Promise<string> => {
+  if (!Number.isFinite(pid) || pid <= 0) {
+    return '';
+  }
+  try {
+    const { stdout } = await execFileAsync(
+      'wmic',
+      ['process', 'where', `processid=${pid}`, 'get', 'Name', '/VALUE'],
+      {
+        encoding: 'buffer',
+        windowsHide: true,
+      }
+    );
+    const decoded = autoDecodeText(stdout) ?? '';
+    if (decoded) {
+      const name = parseWmicValue(decoded, 'Name');
+      if (name) {
+        return name;
+      }
+    }
+  } catch {
+    // Fall back to tasklist.
+  }
+  try {
+    const { stdout } = await execFileAsync(
+      'tasklist',
+      ['/FO', 'CSV', '/NH', '/FI', `PID eq ${pid}`],
+      {
+        encoding: 'buffer',
+        windowsHide: true,
+      }
+    );
+    const decoded = autoDecodeText(stdout) ?? '';
+    if (!decoded) {
+      return '';
+    }
+    return parseTasklistFirstName(decoded);
+  } catch {
+    return '';
+  }
 };
 
 const listUnixNames = async (): Promise<string[]> => {

@@ -46,15 +46,15 @@
           </div>
         </div>
         <div class="rounded-lg bg-muted px-3 py-2">
-          <div class="text-sm font-semibold">Windows</div>
+          <div class="text-sm font-semibold">Presence</div>
           <div class="text-xs text-muted">
-            Context from window titles and focus events.
+            Foreground and background presence by app.
           </div>
         </div>
         <div class="rounded-lg bg-muted px-3 py-2">
           <div class="text-sm font-semibold">Activity</div>
           <div class="text-xs text-muted">
-            Keyboard and mouse activity windows.
+            Keyboard and mouse activity signals.
           </div>
         </div>
       </div>

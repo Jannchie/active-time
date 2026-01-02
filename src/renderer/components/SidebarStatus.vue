@@ -45,7 +45,6 @@ const electron = useElectron();
 const status = ref<{
   available: boolean;
   program?: string;
-  title?: string;
   since?: number;
 }>({
   available: false,
@@ -63,7 +62,7 @@ const statusLabel = computed(() => {
   if (!status.value.available) {
     return 'Activity unavailable';
   }
-  return status.value.program || status.value.title || 'No active app';
+  return status.value.program || 'No active app';
 });
 
 const timeLabel = computed(() => {
@@ -83,7 +82,6 @@ const refreshStatus = async () => {
     status.value = {
       available: Boolean(data?.available),
       program: data?.program,
-      title: data?.title,
       since: typeof data?.since === 'number' ? data.since : undefined,
     };
   } catch {

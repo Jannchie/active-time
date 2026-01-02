@@ -53,36 +53,33 @@ const ensureSchema = () => {
     CREATE TABLE IF NOT EXISTS daily_records (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       program TEXT,
-      title TEXT,
       event TEXT,
       timestamp INTEGER NOT NULL,
       seconds INTEGER NOT NULL,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP
     );
-    CREATE INDEX IF NOT EXISTS daily_records_timestamp_program_title_idx
-      ON daily_records (timestamp, program, title);
+    CREATE INDEX IF NOT EXISTS daily_records_timestamp_program_event_idx
+      ON daily_records (timestamp, program, event);
     CREATE TABLE IF NOT EXISTS hourly_records (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       program TEXT,
-      title TEXT,
       event TEXT,
       timestamp INTEGER NOT NULL,
       seconds INTEGER NOT NULL,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP
     );
-    CREATE INDEX IF NOT EXISTS hourly_records_timestamp_program_title_idx
-      ON hourly_records (timestamp, program, title);
+    CREATE INDEX IF NOT EXISTS hourly_records_timestamp_program_event_idx
+      ON hourly_records (timestamp, program, event);
     CREATE TABLE IF NOT EXISTS minute_records (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       program TEXT,
-      title TEXT,
       event TEXT,
       timestamp INTEGER NOT NULL,
       seconds INTEGER NOT NULL,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP
     );
-    CREATE INDEX IF NOT EXISTS minute_records_timestamp_program_title_idx
-      ON minute_records (timestamp, program, title);
+    CREATE INDEX IF NOT EXISTS minute_records_timestamp_program_event_idx
+      ON minute_records (timestamp, program, event);
     CREATE TABLE IF NOT EXISTS foreground_daily_records (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       program TEXT,
@@ -225,7 +222,6 @@ class DB {
     scope: Scope;
     timestamp: Date | number | string;
     program: string;
-    title: string;
     event: string;
     seconds: number;
   }) {
@@ -239,7 +235,6 @@ class DB {
         and(
           eq(table.timestamp, timestamp),
           eq(table.program, params.program),
-          eq(table.title, params.title),
           eq(table.event, params.event)
         )
       )
@@ -258,7 +253,6 @@ class DB {
       .values({
         timestamp,
         program: params.program,
-        title: params.title,
         event: params.event,
         seconds: params.seconds,
         createdAt,

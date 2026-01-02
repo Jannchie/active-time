@@ -3,7 +3,6 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 export const dailyRecords = sqliteTable('daily_records', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   program: text('program'),
-  title: text('title'),
   event: text('event'),
   timestamp: integer('timestamp').notNull(),
   seconds: integer('seconds').notNull(),
@@ -13,7 +12,6 @@ export const dailyRecords = sqliteTable('daily_records', {
 export const hourlyRecords = sqliteTable('hourly_records', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   program: text('program'),
-  title: text('title'),
   event: text('event'),
   timestamp: integer('timestamp').notNull(),
   seconds: integer('seconds').notNull(),
@@ -23,7 +21,6 @@ export const hourlyRecords = sqliteTable('hourly_records', {
 export const minuteRecords = sqliteTable('minute_records', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   program: text('program'),
-  title: text('title'),
   event: text('event'),
   timestamp: integer('timestamp').notNull(),
   seconds: integer('seconds').notNull(),

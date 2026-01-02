@@ -2,9 +2,9 @@
   <div class="space-y-4">
     <section class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-xl font-semibold">Activity Pulse</h1>
+        <h1 class="text-xl font-semibold">Focus Overview</h1>
         <p class="text-sm text-muted">
-          Snapshot your focus sessions without the charts.
+          Understand your activity across the selected range.
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -22,10 +22,10 @@
       </div>
     </section>
 
-    <section class="grid gap-3 lg:grid-cols-3">
+    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Total Focus
+          Active Input
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ formatDuration(totalSeconds) }}
@@ -36,38 +36,94 @@
       </div>
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Unique Apps
+          Foreground Time
+        </div>
+        <div class="text-2xl font-semibold mt-2">
+          {{ formatDuration(totalForegroundSeconds) }}
+        </div>
+        <div class="text-xs text-muted mt-1">
+          Time your apps stayed in front.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="text-xs uppercase tracking-[0.2em] text-muted">
+          Background Time
+        </div>
+        <div class="text-2xl font-semibold mt-2">
+          {{ formatDuration(totalBackgroundSeconds) }}
+        </div>
+        <div class="text-xs text-muted mt-1">
+          Running while out of focus.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="text-xs uppercase tracking-[0.2em] text-muted">
+          Apps Seen
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ uniquePrograms }}
         </div>
         <div class="text-xs text-muted mt-1">
-          Across {{ uniqueTitles }} window titles.
-        </div>
-      </div>
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Dominant Task
-        </div>
-        <div class="text-lg font-semibold mt-2">
-          {{ topProgram?.name || '--' }}
-        </div>
-        <div class="text-xs text-muted mt-1">
-          {{ topProgram ? formatDuration(topProgram.seconds) : 'No records yet.' }}
+          Apps with activity in this range.
         </div>
       </div>
     </section>
 
-    <section class="grid gap-3 lg:grid-cols-[2fr_1fr]">
+    <section class="grid gap-3 lg:grid-cols-[1.1fr_1.9fr]">
       <div class="panel">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-semibold">Top Applications</h2>
+            <h2 class="text-lg font-semibold">Focus Split</h2>
             <p class="text-xs text-muted">
-              Ranked by total active time.
+              Foreground vs background presence.
             </p>
           </div>
-          <UBadge color="neutral" variant="soft">Top 6</UBadge>
+          <UBadge color="neutral" variant="soft">
+            {{ formatDuration(totalTrackedSeconds) }}
+          </UBadge>
+        </div>
+        <div class="mt-4 space-y-3">
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-medium">Foreground</span>
+            <span class="text-muted">
+              {{ formatDuration(totalForegroundSeconds) }}
+            </span>
+          </div>
+          <UProgress
+            :model-value="foregroundPercent"
+            :max="100"
+            color="neutral"
+            size="2xs"
+          />
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-medium">Background</span>
+            <span class="text-muted">
+              {{ formatDuration(totalBackgroundSeconds) }}
+            </span>
+          </div>
+          <UProgress
+            :model-value="backgroundPercent"
+            :max="100"
+            color="neutral"
+            size="2xs"
+          />
+          <div class="text-xs text-muted">
+            Active input logged: {{ formatDuration(totalSeconds) }}.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-semibold">Top Focus Apps</h2>
+            <p class="text-xs text-muted">
+              Ranked by active input time.
+            </p>
+          </div>
+          <UBadge color="neutral" variant="soft">
+            Top {{ topPrograms.length }}
+          </UBadge>
         </div>
         <div v-if="topPrograms.length" class="mt-4 space-y-3">
           <div v-for="item in topPrograms" :key="item.name" class="space-y-1">
@@ -92,103 +148,52 @@
           <UIcon name="i-lucide-moon-star" class="h-6 w-6" />
           Collecting fresh activity records...
         </div>
-        <div class="mt-4 space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold">Foreground Time</h3>
-            <span class="text-xs text-muted">Top 6</span>
-          </div>
-          <div v-if="topForegroundPrograms.length" class="space-y-2">
-            <div
-              v-for="item in topForegroundPrograms"
-              :key="item.name"
-              class="space-y-1"
-            >
-              <div class="flex items-center justify-between text-sm">
-                <span class="font-medium">{{ item.name }}</span>
-                <span class="text-muted">
-                  {{ formatDuration(item.seconds) }}
-                </span>
-              </div>
-              <UProgress
-                :model-value="item.percent"
-                :max="100"
-                color="neutral"
-                size="2xs"
-              />
-            </div>
-          </div>
-          <div v-else class="text-xs text-muted">
-            {{
-              loadingForeground
-                ? 'Reading foreground time...'
-                : 'No foreground data.'
-            }}
-          </div>
-        </div>
-        <div class="mt-4 space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold">Background Time</h3>
-            <span class="text-xs text-muted">Top 6</span>
-          </div>
-          <div v-if="topBackgroundPrograms.length" class="space-y-2">
-            <div
-              v-for="item in topBackgroundPrograms"
-              :key="item.name"
-              class="space-y-1"
-            >
-              <div class="flex items-center justify-between text-sm">
-                <span class="font-medium">{{ item.name }}</span>
-                <span class="text-muted">
-                  {{ formatDuration(item.seconds) }}
-                </span>
-              </div>
-              <UProgress
-                :model-value="item.percent"
-                :max="100"
-                color="neutral"
-                size="2xs"
-              />
-            </div>
-          </div>
-          <div v-else class="text-xs text-muted">
-            {{
-              loadingBackground
-                ? 'Reading background time...'
-                : 'No background data.'
-            }}
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold">Latest Entries</h2>
-          <UBadge color="neutral" variant="soft">{{ recentRecords.length }}</UBadge>
-        </div>
-        <div class="mt-3 space-y-2">
-          <div
-            v-for="(record, index) in recentRecords"
-            :key="record.id ?? `${record.timestamp}-${index}`"
-            class="rounded-lg bg-muted px-3 py-2 text-xs"
-          >
-            <div class="flex items-center justify-between">
-              <span class="font-semibold">{{ record.program || 'Unknown' }}</span>
-              <span class="text-muted">
-                {{ formatDuration(record.seconds) }}
-              </span>
-            </div>
-            <div class="text-muted mt-1 break-words">
-              {{ record.title || 'Untitled window' }}
-            </div>
-            <div class="text-muted mt-1">
-              {{ formatTimestamp(record.timestamp) }}
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
-    <section v-if="loading" class="text-sm text-muted">
+    <section class="panel">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold">Activity Log</h2>
+          <p class="text-xs text-muted">
+            Latest inputs captured in the selected range.
+          </p>
+        </div>
+        <UBadge color="neutral" variant="soft">{{ recentRecords.length }}</UBadge>
+      </div>
+      <div v-if="recentRecords.length" class="mt-3 space-y-2">
+        <div
+          v-for="(record, index) in recentRecords"
+          :key="record.id ?? `${record.timestamp}-${index}`"
+          class="rounded-lg bg-muted px-3 py-2 text-xs"
+        >
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">{{ record.program || 'Unknown' }}</span>
+            <span class="text-muted">
+              {{ formatDuration(record.seconds) }}
+            </span>
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[11px] text-muted">
+            <span>{{ formatTimestamp(record.timestamp) }}</span>
+            <span
+              v-if="record.event"
+              class="rounded-full bg-muted/70 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              {{ record.event }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div
+        v-else
+        class="mt-5 flex flex-col items-center gap-2 text-sm text-muted"
+      >
+        <UIcon name="i-lucide-sparkles" class="h-6 w-6" />
+        No activity logged yet.
+      </div>
+    </section>
+
+    <section v-if="isSyncing" class="text-sm text-muted">
       Syncing latest records...
     </section>
   </div>
@@ -203,7 +208,6 @@ import { useCheckInterval } from '@/composables/useCheckInterval';
 type ActivityRecord = {
   id?: string | number;
   program?: string;
-  title?: string;
   event?: string;
   timestamp?: string | number | Date;
   seconds?: number;
@@ -340,17 +344,53 @@ const totalSeconds = computed(() =>
   records.value.reduce((sum, record) => sum + (record.seconds ?? 0), 0)
 );
 
-const uniquePrograms = computed(
-  () =>
-    new Set(
-      records.value.map((record) => record.program).filter(Boolean)
-    ).size
+const totalForegroundSeconds = computed(() =>
+  foregroundRecords.value.reduce((sum, record) => sum + (record.seconds ?? 0), 0)
 );
 
-const uniqueTitles = computed(
-  () =>
-    new Set(records.value.map((record) => record.title).filter(Boolean)).size
+const totalBackgroundSeconds = computed(() =>
+  backgroundRecords.value.reduce((sum, record) => sum + (record.seconds ?? 0), 0)
 );
+
+const totalTrackedSeconds = computed(
+  () => totalForegroundSeconds.value + totalBackgroundSeconds.value
+);
+
+const foregroundPercent = computed(() => {
+  const total = totalTrackedSeconds.value;
+  if (!total) {
+    return 0;
+  }
+  return Math.round((totalForegroundSeconds.value / total) * 100);
+});
+
+const backgroundPercent = computed(() => {
+  const total = totalTrackedSeconds.value;
+  if (!total) {
+    return 0;
+  }
+  return Math.round((totalBackgroundSeconds.value / total) * 100);
+});
+
+const uniquePrograms = computed(() => {
+  const programs = new Set<string>();
+  records.value.forEach((record) => {
+    if (record.program) {
+      programs.add(record.program);
+    }
+  });
+  foregroundRecords.value.forEach((record) => {
+    if (record.program) {
+      programs.add(record.program);
+    }
+  });
+  backgroundRecords.value.forEach((record) => {
+    if (record.program) {
+      programs.add(record.program);
+    }
+  });
+  return programs.size;
+});
 
 const topPrograms = computed(() => {
   const totals = new Map<string, number>();
@@ -374,58 +414,6 @@ const topPrograms = computed(() => {
     .slice(0, 6);
 });
 
-const topForegroundPrograms = computed(() => {
-  const totals = new Map<string, number>();
-  foregroundRecords.value.forEach((record) => {
-    if (!record.program) {
-      return;
-    }
-    totals.set(
-      record.program,
-      (totals.get(record.program) ?? 0) + (record.seconds ?? 0)
-    );
-  });
-  const rangeSeconds = Math.max(
-    1,
-    Math.floor(activeRange.value.duration / 1000)
-  );
-  return Array.from(totals.entries())
-    .map(([name, seconds]) => ({
-      name,
-      seconds,
-      percent: Math.min(100, Math.round((seconds / rangeSeconds) * 100)),
-    }))
-    .sort((a, b) => b.seconds - a.seconds)
-    .slice(0, 6);
-});
-
-const topBackgroundPrograms = computed(() => {
-  const totals = new Map<string, number>();
-  backgroundRecords.value.forEach((record) => {
-    if (!record.program) {
-      return;
-    }
-    totals.set(
-      record.program,
-      (totals.get(record.program) ?? 0) + (record.seconds ?? 0)
-    );
-  });
-  const rangeSeconds = Math.max(
-    1,
-    Math.floor(activeRange.value.duration / 1000)
-  );
-  return Array.from(totals.entries())
-    .map(([name, seconds]) => ({
-      name,
-      seconds,
-      percent: Math.min(100, Math.round((seconds / rangeSeconds) * 100)),
-    }))
-    .sort((a, b) => b.seconds - a.seconds)
-    .slice(0, 6);
-});
-
-const topProgram = computed(() => topPrograms.value[0]);
-
 const recentRecords = computed(() =>
   [...records.value]
     .sort((a, b) => {
@@ -434,6 +422,10 @@ const recentRecords = computed(() =>
       return bTime - aTime;
     })
     .slice(0, 6)
+);
+
+const isSyncing = computed(
+  () => loading.value || loadingForeground.value || loadingBackground.value
 );
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
