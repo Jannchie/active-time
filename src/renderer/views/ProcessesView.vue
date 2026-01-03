@@ -70,7 +70,7 @@
     </section>
 
     <section class="panel">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 class="text-lg font-semibold">App Detail</h2>
           <p class="text-xs text-muted">
@@ -78,6 +78,9 @@
           </p>
         </div>
         <UBadge color="neutral" variant="soft">{{ processRows.length }}</UBadge>
+      </div>
+      <div class="mt-2 text-xs text-muted">
+        Sorted by {{ sortLabel }}
       </div>
       <div v-if="processRows.length" class="mt-4 space-y-2">
         <div
@@ -129,7 +132,7 @@
           </div>
           <UProgress
             class="w-full"
-            :model-value="row.foregroundPercent"
+            :model-value="row.progressValue"
             :max="100"
             color="neutral"
             size="2xs"
@@ -195,6 +198,7 @@ const activeRange = ref(ranges[0]);
 const foregroundRecords = ref<ForegroundRecord[]>([]);
 const backgroundRecords = ref<BackgroundRecord[]>([]);
 const loading = ref(false);
+const sortLabel = computed(() => 'Foreground');
 const iconMap = ref<Record<string, string | null>>({});
 const iconLastAttempt = ref<Record<string, number>>({});
 let iconLookupAvailable = true;
@@ -246,6 +250,7 @@ const refresh = async () => {
 const setRange = (range: (typeof ranges)[number]) => {
   activeRange.value = range;
 };
+
 
 const refreshIcons = async (names: string[]) => {
   if (!electron) {
@@ -387,21 +392,38 @@ const processRows = computed(() => {
   backgroundRecords.value.forEach((record) => {
     applyRecord(record, 'background');
   });
-  return Array.from(totals.entries())
+  const resolveSortValue = (row: { foreground: number }) => row.foreground;
+  const rows = Array.from(totals.entries())
     .map(([name, values]) => {
       const total = values.foreground + values.background;
-      const foregroundPercent =
-        total > 0 ? Math.round((values.foreground / total) * 100) : 0;
+      const sortValue = resolveSortValue({
+        foreground: values.foreground,
+      });
       return {
         name,
         foreground: values.foreground,
         background: values.background,
         total,
         lastSeen: values.lastSeen,
-        foregroundPercent,
+        sortValue,
       };
+    });
+  const maxSortValue = rows.reduce(
+    (max, row) => Math.max(max, row.sortValue),
+    0
+  );
+  return rows
+    .sort((a, b) => {
+      if (a.sortValue === b.sortValue) {
+        return a.name.localeCompare(b.name);
+      }
+      return b.sortValue - a.sortValue;
     })
-    .sort((a, b) => b.total - a.total);
+    .map((row) => ({
+      ...row,
+      progressValue:
+        maxSortValue > 0 ? Math.round((row.sortValue / maxSortValue) * 100) : 0,
+    }));
 });
 
 let intervalId: ReturnType<typeof setInterval> | null = null;

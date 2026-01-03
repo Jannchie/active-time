@@ -39,11 +39,17 @@ const activeStatus = {
 };
 const foregroundProgramCache = new Set<string>();
 const programLabelCache = new Map<string, string>();
-const programIconCache = new Map<string, string | null>();
+type ProgramIconCacheEntry = { data: string | null; updatedAt: number };
+const programIconCache = new Map<string, ProgramIconCacheEntry>();
 const programPathCache = new Map<string, string>();
 const pidProgramCache = new Map<number, { name: string; cachedAt: number }>();
 const PATH_REFRESH_INTERVAL_MS = 60 * 1000;
 const PID_CACHE_TTL_MS = 5 * 60 * 1000;
+const ICON_MISS_TTL_MS = 10 * 60 * 1000;
+const ICON_CACHE_SAVE_DEBOUNCE_MS = 2000;
+const ICON_CACHE_FILE = 'program-icons.json';
+let iconCacheSaveTimer: NodeJS.Timeout | null = null;
+let iconCacheDirty = false;
 let lastPathRefresh = 0;
 
 const stripProgramExtension = (value: string) => {
@@ -114,13 +120,82 @@ const refreshWindowsPathCache = async () => {
   }
 };
 
+const getIconCachePath = () =>
+  path.join(app.getPath('userData'), ICON_CACHE_FILE);
+
+const loadIconCache = async () => {
+  try {
+    const raw = await fs.readFile(getIconCachePath(), 'utf8');
+    if (!raw) {
+      return;
+    }
+    const now = Date.now();
+    const data = JSON.parse(raw) as Record<string, unknown>;
+    Object.entries(data).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        programIconCache.set(key, { data: value, updatedAt: now });
+        return;
+      }
+      if (!value || typeof value !== 'object') {
+        return;
+      }
+      const record = value as { data?: unknown; updatedAt?: unknown };
+      if (typeof record.data === 'string') {
+        programIconCache.set(key, {
+          data: record.data,
+          updatedAt:
+            typeof record.updatedAt === 'number' ? record.updatedAt : now,
+        });
+      }
+    });
+  } catch {
+    // Ignore cache load errors.
+  }
+};
+
+const flushIconCache = async () => {
+  if (!iconCacheDirty) {
+    return;
+  }
+  iconCacheDirty = false;
+  const payload: Record<string, { data: string; updatedAt: number }> = {};
+  programIconCache.forEach((entry, key) => {
+    if (entry.data) {
+      payload[key] = { data: entry.data, updatedAt: entry.updatedAt };
+    }
+  });
+  try {
+    await fs.writeFile(getIconCachePath(), JSON.stringify(payload));
+  } catch {
+    iconCacheDirty = true;
+  }
+};
+
+const scheduleIconCacheSave = () => {
+  iconCacheDirty = true;
+  if (iconCacheSaveTimer) {
+    return;
+  }
+  iconCacheSaveTimer = setTimeout(() => {
+    iconCacheSaveTimer = null;
+    void flushIconCache();
+  }, ICON_CACHE_SAVE_DEBOUNCE_MS);
+};
+
 const resolveProgramIcon = async (programName: string): Promise<string | null> => {
   const normalized = normalizeProgramName(programName);
   if (!normalized) {
     return null;
   }
-  if (programIconCache.has(normalized)) {
-    return programIconCache.get(normalized) ?? null;
+  const cached = programIconCache.get(normalized);
+  const now = Date.now();
+  if (cached) {
+    if (cached.data) {
+      return cached.data;
+    }
+    if (now - cached.updatedAt < ICON_MISS_TTL_MS) {
+      return null;
+    }
   }
   let iconData: string | null = null;
   if (process.platform === 'win32') {
@@ -134,8 +209,20 @@ const resolveProgramIcon = async (programName: string): Promise<string | null> =
       }
     }
   }
-  programIconCache.set(normalized, iconData);
+  programIconCache.set(normalized, { data: iconData, updatedAt: now });
+  if (iconData) {
+    scheduleIconCacheSave();
+  }
   return iconData;
+};
+
+const cacheProgramIcon = async (programName: string) => {
+  try {
+    await refreshWindowsPathCache();
+    await resolveProgramIcon(programName);
+  } catch {
+    // Ignore cache errors.
+  }
 };
 
 const trackForegroundProgram = (program: string) => {
@@ -266,6 +353,14 @@ if (process.env.NODE_ENV === 'production') {
 
 process.on('exit', () => {
   uIOhook?.stop?.();
+});
+
+app.on('before-quit', () => {
+  if (iconCacheSaveTimer) {
+    clearTimeout(iconCacheSaveTimer);
+    iconCacheSaveTimer = null;
+  }
+  void flushIconCache();
 });
 
 const isDebug =
@@ -618,6 +713,7 @@ function setTray(win: BrowserWindow) {
 
 async function start() {
   await app.whenReady();
+  await loadIconCache();
   await DB.sync();
   await loadForegroundPrograms();
   const win = await createWindow();
@@ -653,6 +749,7 @@ function detectActive() {
       return;
     }
     trackForegroundProgram(normalizedProgram);
+    void cacheProgramIcon(normalizedProgram);
     const scopes = [
       { scope: 'day', timestamp: getCurDay(now) },
       { scope: 'minute', timestamp: getCurMinute(now) },

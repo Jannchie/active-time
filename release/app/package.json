@@ -16,7 +16,7 @@
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {
-    "@jannchie/active-window": "^1.0.2",
+    "@jannchie/active-window": "^1.1.0",
     "better-sqlite3": "^12.5.0",
     "drizzle-orm": "^0.45.1",
     "uiohook-napi": "^1.5.4"

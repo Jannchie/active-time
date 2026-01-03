@@ -1,184 +1,54 @@
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import { autoDecodeText } from './util';
+let activeWindow: any = null;
+try {
+  const activeWindowModule = require('@jannchie/active-window');
+  activeWindow = activeWindowModule?.default ?? activeWindowModule;
+} catch {
+  activeWindow = null;
+}
 
-const execFileAsync = promisify(execFile);
-
-const parseTasklistNames = (stdout: string) => {
-  return stdout
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      if (line.startsWith('"')) {
-        const trimmed = line.length >= 2 ? line.slice(1, -1) : line;
-        const [name] = trimmed.split('","');
-        return name;
-      }
-      return line.split(/\s+/)[0];
-    })
-    .filter(Boolean);
-};
-
-const parseTasklistFirstName = (stdout: string) => {
-  const names = parseTasklistNames(stdout);
-  return names[0] ?? '';
-};
-
-const listWindowsNames = async (): Promise<string[]> => {
-  const { stdout } = await execFileAsync(
-    'tasklist',
-    ['/FO', 'CSV', '/NH'],
-    {
-      encoding: 'buffer',
-      windowsHide: true,
-    }
-  );
-  const decoded = autoDecodeText(stdout);
-  if (!decoded) {
+export const listRunningProcessNames = async (): Promise<string[]> => {
+  const fn = activeWindow?.listRunningProcessNames;
+  if (typeof fn !== 'function') {
     return [];
   }
-  return parseTasklistNames(decoded);
-};
-
-const parseWmicProcessPaths = (stdout: string) => {
-  const map = new Map<string, string>();
-  let name = '';
-  let path = '';
-  const flush = () => {
-    if (name && path && !map.has(name)) {
-      map.set(name, path);
-    }
-    name = '';
-    path = '';
-  };
-  stdout.split(/\r?\n/).forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      flush();
-      return;
-    }
-    const [keyRaw, ...rest] = trimmed.split('=');
-    if (!keyRaw) {
-      return;
-    }
-    const key = keyRaw.trim().toLowerCase();
-    const value = rest.join('=').trim();
-    if (key === 'name') {
-      name = value;
-    } else if (key === 'executablepath') {
-      path = value;
-    }
-  });
-  flush();
-  return map;
-};
-
-const parseWmicValue = (stdout: string, keyName: string) => {
-  let result = '';
-  stdout.split(/\r?\n/).forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      return;
-    }
-    const [keyRaw, ...rest] = trimmed.split('=');
-    if (!keyRaw) {
-      return;
-    }
-    const key = keyRaw.trim().toLowerCase();
-    if (key === keyName.toLowerCase()) {
-      result = rest.join('=').trim();
-    }
-  });
-  return result;
+  try {
+    const result = await fn();
+    return Array.isArray(result) ? result : [];
+  } catch {
+    return [];
+  }
 };
 
 export const listWindowsProcessPaths = async (): Promise<Map<string, string>> => {
-  const { stdout } = await execFileAsync(
-    'wmic',
-    ['process', 'get', 'Name,ExecutablePath', '/VALUE'],
-    {
-      encoding: 'buffer',
-      windowsHide: true,
-    }
-  );
-  const decoded = autoDecodeText(stdout) ?? '';
-  if (!decoded) {
+  if (process.platform !== 'win32') {
     return new Map();
   }
-  return parseWmicProcessPaths(decoded);
+  const fn = activeWindow?.listWindowsProcessPaths;
+  if (typeof fn !== 'function') {
+    return new Map();
+  }
+  try {
+    const result = await fn();
+    return result instanceof Map ? result : new Map();
+  } catch {
+    return new Map();
+  }
 };
 
 export const getWindowsProcessNameByPid = async (
   pid: number
 ): Promise<string> => {
-  if (!Number.isFinite(pid) || pid <= 0) {
+  if (process.platform !== 'win32') {
+    return '';
+  }
+  const fn = activeWindow?.getWindowsProcessNameByPid;
+  if (typeof fn !== 'function') {
     return '';
   }
   try {
-    const { stdout } = await execFileAsync(
-      'wmic',
-      ['process', 'where', `processid=${pid}`, 'get', 'Name', '/VALUE'],
-      {
-        encoding: 'buffer',
-        windowsHide: true,
-      }
-    );
-    const decoded = autoDecodeText(stdout) ?? '';
-    if (decoded) {
-      const name = parseWmicValue(decoded, 'Name');
-      if (name) {
-        return name;
-      }
-    }
-  } catch {
-    // Fall back to tasklist.
-  }
-  try {
-    const { stdout } = await execFileAsync(
-      'tasklist',
-      ['/FO', 'CSV', '/NH', '/FI', `PID eq ${pid}`],
-      {
-        encoding: 'buffer',
-        windowsHide: true,
-      }
-    );
-    const decoded = autoDecodeText(stdout) ?? '';
-    if (!decoded) {
-      return '';
-    }
-    return parseTasklistFirstName(decoded);
+    const result = await fn(pid);
+    return typeof result === 'string' ? result : '';
   } catch {
     return '';
-  }
-};
-
-const listUnixNames = async (): Promise<string[]> => {
-  const { stdout } = await execFileAsync('ps', ['-A', '-o', 'comm='], {
-    encoding: 'utf8',
-  });
-  return stdout
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-};
-
-const listDarwinNames = async (): Promise<string[]> => {
-  return listUnixNames();
-};
-
-export const listRunningProcessNames = async (): Promise<string[]> => {
-  try {
-    let names: string[];
-    if (process.platform === 'win32') {
-      names = await listWindowsNames();
-    } else if (process.platform === 'darwin') {
-      names = await listDarwinNames();
-    } else {
-      names = await listUnixNames();
-    }
-    return [...new Set(names.map((name) => name.trim()).filter(Boolean))];
-  } catch {
-    return [];
   }
 };
