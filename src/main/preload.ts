@@ -26,7 +26,11 @@ export type Channels =
   | 'get-check-interval'
   | 'set-check-interval'
   | 'check-interval-changed'
-  | 'get-program-icons';
+  | 'get-program-icons'
+  | 'get-marked-programs'
+  | 'add-marked-program'
+  | 'remove-marked-program'
+  | 'get-marked-running-programs';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

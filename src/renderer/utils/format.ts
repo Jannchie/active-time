@@ -1,3 +1,8 @@
+import { i18n } from '@/i18n';
+
+const t = (key: string, params?: Record<string, number | string>) =>
+  params ? i18n.global.t(key, params) : i18n.global.t(key);
+
 export const formatBytes = (size?: number | null) => {
   if (size === undefined || size === null || Number.isNaN(size)) {
     return '--';
@@ -16,7 +21,7 @@ export const formatBytes = (size?: number | null) => {
 
 export const formatDuration = (seconds?: number | null) => {
   if (!seconds || Number.isNaN(seconds)) {
-    return '0s';
+    return t('time.seconds', { seconds: 0 });
   }
   const totalMinutes = Math.floor(seconds / 60);
   const hours = Math.floor(totalMinutes / 60);
@@ -24,12 +29,12 @@ export const formatDuration = (seconds?: number | null) => {
   const remainder = Math.floor(seconds % 60);
 
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
+    return t('time.hoursMinutes', { hours, minutes });
   }
   if (minutes > 0) {
-    return `${minutes}m ${remainder}s`;
+    return t('time.minutesSeconds', { minutes, seconds: remainder });
   }
-  return `${remainder}s`;
+  return t('time.seconds', { seconds: remainder });
 };
 
 export const formatTimestamp = (value: string | number | Date) => {
@@ -37,5 +42,5 @@ export const formatTimestamp = (value: string | number | Date) => {
   if (Number.isNaN(date.getTime())) {
     return '--';
   }
-  return date.toLocaleString();
+  return date.toLocaleString(i18n.global.locale.value);
 };

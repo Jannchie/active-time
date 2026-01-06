@@ -1,0 +1,179 @@
+{
+  "app": {
+    "name": "Active Time"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "processes": "Processes",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "sidebar": {
+    "activeApp": "Active App",
+    "markedEmpty": "Mark apps to show them here.",
+    "markedInactive": "No marked apps running."
+  },
+  "status": {
+    "recording": "Recording",
+    "paused": "Paused",
+    "storage": "Storage {size}",
+    "active": "Active: {label}",
+    "sample": "Sample {seconds}{unit}",
+    "privacy": "Focus stays local. Data never leaves this device.",
+    "activityUnavailable": "Activity unavailable",
+    "noActiveApp": "No active app",
+    "started": "Started {time}",
+    "startedUnknown": "Started --",
+    "running": "Running {duration}",
+    "runningUnknown": "Running --"
+  },
+  "common": {
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System",
+    "range": "Range {min}-{max}{unit}",
+    "secondsShort": "s",
+    "top": "Top {count}",
+    "unknown": "Unknown",
+    "total": "Total",
+    "foreground": "Foreground",
+    "background": "Background",
+    "lastSeen": "Last Seen",
+    "process": "Process",
+    "version": "Version {version}"
+  },
+  "time": {
+    "hoursMinutes": "{hours}h {minutes}m",
+    "minutesSeconds": "{minutes}m {seconds}s",
+    "seconds": "{seconds}s"
+  },
+  "ranges": {
+    "lastHour": "Last Hour",
+    "last3Days": "Last 3 Days",
+    "last90Days": "Last 90 Days",
+    "caption": {
+      "lastHour": "Rolling 60 minutes of activity",
+      "last3Days": "Highlights for the past 72 hours",
+      "last90Days": "Daily rhythm across the last quarter"
+    }
+  },
+  "dashboard": {
+    "title": "Focus Overview",
+    "description": "Understand your activity across the selected range.",
+    "metrics": {
+      "activeInput": "Active Input",
+      "foregroundTime": "Foreground Time",
+      "backgroundTime": "Background Time",
+      "appsSeen": "Apps Seen",
+      "foregroundHint": "Time your apps stayed in front.",
+      "backgroundHint": "Running while out of focus.",
+      "appsSeenHint": "Apps with activity in this range."
+    },
+    "focusSplit": {
+      "title": "Focus Presence",
+      "description": "Foreground focus over the selected range.",
+      "activeInputLogged": "Active input logged: {duration}."
+    },
+    "topApps": {
+      "title": "Top Focus Apps",
+      "description": "Ranked by active input time.",
+      "empty": "Collecting fresh activity records..."
+    },
+    "activityLog": {
+      "title": "Activity Log",
+      "description": "Latest inputs captured in the selected range.",
+      "empty": "No activity logged yet."
+    },
+    "syncing": "Syncing latest records..."
+  },
+  "processes": {
+    "title": "App Breakdown",
+    "description": "Foreground presence per app.",
+    "metrics": {
+      "totalTime": "Total Time",
+      "foregroundTime": "Foreground Time",
+      "backgroundTime": "Background Time",
+      "trackedApps": "Tracked Apps",
+      "foregroundHint": "Time in front of you.",
+      "backgroundHint": "Running behind the scenes.",
+      "trackedAppsHint": "Apps with foreground activity."
+    },
+    "detail": {
+      "title": "App Detail",
+      "description": "Foreground focus and last seen per app."
+    },
+    "mark": "Mark",
+    "unmark": "Unmark",
+    "sortedBy": "Sorted by {sort}",
+    "table": {
+      "process": "Process",
+      "total": "Total",
+      "foreground": "Foreground",
+      "background": "Background",
+      "lastSeen": "Last Seen"
+    },
+    "loading": "Reading process stats...",
+    "empty": "No process time recorded yet.",
+    "syncing": "Syncing process stats...",
+    "sort": {
+      "foreground": "Foreground"
+    }
+  },
+  "settings": {
+    "title": "Studio Settings",
+    "description": "Tune the workspace ambience and startup behavior.",
+    "theme": {
+      "title": "Theme",
+      "description": "Pick a mood for the dashboard."
+    },
+    "interval": {
+      "title": "Sampling Interval",
+      "description": "Sync data collection and refresh cadence."
+    },
+    "autoStart": {
+      "title": "Auto Start",
+      "description": "Launch Active Time when your system boots."
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "description": "Reset all locally stored activity data.",
+      "action": "Wipe Data",
+      "modalTitle": "Delete all data?",
+      "modalDescription": "This will permanently remove every activity record stored on this device."
+    },
+    "language": {
+      "title": "Language",
+      "description": "Switch the interface language."
+    }
+  },
+  "about": {
+    "title": "About Active Time",
+    "description": "A local-first focus tracker built for calm productivity.",
+    "madeBy": "Made by Jianqi Pan. Crafted for focused work habits.",
+    "github": "GitHub",
+    "tracks": {
+      "title": "What it tracks",
+      "apps": {
+        "title": "Apps",
+        "description": "Time spent across active applications."
+      },
+      "presence": {
+        "title": "Presence",
+        "description": "Foreground and background presence by app."
+      },
+      "activity": {
+        "title": "Activity",
+        "description": "Keyboard and mouse activity signals."
+      }
+    }
+  },
+  "language": {
+    "english": "English",
+    "simplifiedChinese": "Simplified Chinese"
+  }
+}

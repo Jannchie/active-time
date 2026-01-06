@@ -137,6 +137,14 @@ const ensureSchema = () => {
     );
     CREATE INDEX IF NOT EXISTS background_minute_records_timestamp_program_idx
       ON background_minute_records (timestamp, program);
+
+    CREATE TABLE IF NOT EXISTS marked_programs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      program TEXT NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS marked_programs_program_idx
+      ON marked_programs (program);
   `);
 };
 
@@ -203,6 +211,7 @@ class DB {
       DROP TABLE IF EXISTS background_daily_records;
       DROP TABLE IF EXISTS background_hourly_records;
       DROP TABLE IF EXISTS background_minute_records;
+      DROP TABLE IF EXISTS marked_programs;
     `);
     sqlite.exec('VACUUM;');
     ensureSchema();
@@ -465,6 +474,35 @@ class DB {
     return rows
       .map((row) => String(row.program ?? '').trim())
       .filter(Boolean);
+  }
+
+  static async listMarkedPrograms() {
+    const rows = sqlite
+      .prepare('SELECT DISTINCT program FROM marked_programs')
+      .all() as { program: string | null }[];
+    return rows
+      .map((row) => String(row.program ?? '').trim())
+      .filter(Boolean);
+  }
+
+  static async addMarkedProgram(program: string) {
+    const trimmed = program.trim();
+    if (!trimmed) {
+      return;
+    }
+    sqlite
+      .prepare('INSERT OR IGNORE INTO marked_programs (program) VALUES (?)')
+      .run(trimmed);
+  }
+
+  static async removeMarkedProgram(program: string) {
+    const trimmed = program.trim();
+    if (!trimmed) {
+      return;
+    }
+    sqlite
+      .prepare('DELETE FROM marked_programs WHERE program = ?')
+      .run(trimmed);
   }
 }
 

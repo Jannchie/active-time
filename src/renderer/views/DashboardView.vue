@@ -2,9 +2,9 @@
   <div class="space-y-4">
     <section class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-xl font-semibold">Focus Overview</h1>
+        <h1 class="text-xl font-semibold">{{ t('dashboard.title') }}</h1>
         <p class="text-sm text-muted">
-          Understand your activity across the selected range.
+          {{ t('dashboard.description') }}
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -22,10 +22,10 @@
       </div>
     </section>
 
-    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Active Input
+          {{ t('dashboard.metrics.activeInput') }}
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ formatDuration(totalSeconds) }}
@@ -36,35 +36,24 @@
       </div>
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Foreground Time
+          {{ t('dashboard.metrics.foregroundTime') }}
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ formatDuration(totalForegroundSeconds) }}
         </div>
         <div class="text-xs text-muted mt-1">
-          Time your apps stayed in front.
+          {{ t('dashboard.metrics.foregroundHint') }}
         </div>
       </div>
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Background Time
-        </div>
-        <div class="text-2xl font-semibold mt-2">
-          {{ formatDuration(totalBackgroundSeconds) }}
-        </div>
-        <div class="text-xs text-muted mt-1">
-          Running while out of focus.
-        </div>
-      </div>
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Apps Seen
+          {{ t('dashboard.metrics.appsSeen') }}
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ uniquePrograms }}
         </div>
         <div class="text-xs text-muted mt-1">
-          Apps with activity in this range.
+          {{ t('dashboard.metrics.appsSeenHint') }}
         </div>
       </div>
     </section>
@@ -73,9 +62,9 @@
       <div class="panel">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-semibold">Focus Split</h2>
+            <h2 class="text-lg font-semibold">{{ t('dashboard.focusSplit.title') }}</h2>
             <p class="text-xs text-muted">
-              Foreground vs background presence.
+              {{ t('dashboard.focusSplit.description') }}
             </p>
           </div>
           <UBadge color="neutral" variant="soft">
@@ -84,7 +73,7 @@
         </div>
         <div class="mt-4 space-y-3">
           <div class="flex items-center justify-between text-sm">
-            <span class="font-medium">Foreground</span>
+            <span class="font-medium">{{ t('common.foreground') }}</span>
             <span class="text-muted">
               {{ formatDuration(totalForegroundSeconds) }}
             </span>
@@ -95,20 +84,8 @@
             color="neutral"
             size="2xs"
           />
-          <div class="flex items-center justify-between text-sm">
-            <span class="font-medium">Background</span>
-            <span class="text-muted">
-              {{ formatDuration(totalBackgroundSeconds) }}
-            </span>
-          </div>
-          <UProgress
-            :model-value="backgroundPercent"
-            :max="100"
-            color="neutral"
-            size="2xs"
-          />
           <div class="text-xs text-muted">
-            Active input logged: {{ formatDuration(totalSeconds) }}.
+            {{ t('dashboard.focusSplit.activeInputLogged', { duration: formatDuration(totalSeconds) }) }}
           </div>
         </div>
       </div>
@@ -116,13 +93,13 @@
       <div class="panel">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-semibold">Top Focus Apps</h2>
+            <h2 class="text-lg font-semibold">{{ t('dashboard.topApps.title') }}</h2>
             <p class="text-xs text-muted">
-              Ranked by active input time.
+              {{ t('dashboard.topApps.description') }}
             </p>
           </div>
           <UBadge color="neutral" variant="soft">
-            Top {{ topPrograms.length }}
+            {{ t('common.top', { count: topPrograms.length }) }}
           </UBadge>
         </div>
         <div v-if="topPrograms.length" class="mt-4 space-y-3">
@@ -146,7 +123,7 @@
           class="mt-5 flex flex-col items-center gap-2 text-sm text-muted"
         >
           <UIcon name="i-lucide-moon-star" class="h-6 w-6" />
-          Collecting fresh activity records...
+          {{ t('dashboard.topApps.empty') }}
         </div>
       </div>
     </section>
@@ -154,9 +131,9 @@
     <section class="panel">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold">Activity Log</h2>
+          <h2 class="text-lg font-semibold">{{ t('dashboard.activityLog.title') }}</h2>
           <p class="text-xs text-muted">
-            Latest inputs captured in the selected range.
+            {{ t('dashboard.activityLog.description') }}
           </p>
         </div>
         <UBadge color="neutral" variant="soft">{{ recentRecords.length }}</UBadge>
@@ -168,7 +145,7 @@
           class="rounded-lg bg-muted px-3 py-2 text-xs"
         >
           <div class="flex items-center justify-between">
-            <span class="font-semibold">{{ record.program || 'Unknown' }}</span>
+            <span class="font-semibold">{{ record.program || t('common.unknown') }}</span>
             <span class="text-muted">
               {{ formatDuration(record.seconds) }}
             </span>
@@ -189,12 +166,12 @@
         class="mt-5 flex flex-col items-center gap-2 text-sm text-muted"
       >
         <UIcon name="i-lucide-sparkles" class="h-6 w-6" />
-        No activity logged yet.
+        {{ t('dashboard.activityLog.empty') }}
       </div>
     </section>
 
     <section v-if="isSyncing" class="text-sm text-muted">
-      Syncing latest records...
+      {{ t('dashboard.syncing') }}
     </section>
   </div>
 </template>
@@ -204,6 +181,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { formatDuration, formatTimestamp } from '@/utils/format';
 import { useElectron } from '@/composables/useElectron';
 import { useCheckInterval } from '@/composables/useCheckInterval';
+import { useI18n } from 'vue-i18n';
 
 type ActivityRecord = {
   id?: string | number;
@@ -227,32 +205,45 @@ type BackgroundRecord = {
 
 const electron = useElectron();
 const { checkInterval } = useCheckInterval();
+const { t } = useI18n();
 
-const ranges = [
+type RangeKey = 'minute' | 'hour' | 'day';
+type RangeItem = {
+  key: RangeKey;
+  label: string;
+  caption: string;
+  channel: string;
+  duration: number;
+};
+
+const ranges = computed<RangeItem[]>(() => [
   {
     key: 'minute',
-    label: 'Last Hour',
-    caption: 'Rolling 60 minutes of activity',
+    label: t('ranges.lastHour'),
+    caption: t('ranges.caption.lastHour'),
     channel: 'get-minutes-records',
     duration: 60 * 60 * 1000,
   },
   {
     key: 'hour',
-    label: 'Last 3 Days',
-    caption: 'Highlights for the past 72 hours',
+    label: t('ranges.last3Days'),
+    caption: t('ranges.caption.last3Days'),
     channel: 'get-hours-records',
     duration: 60 * 60 * 72 * 1000,
   },
   {
     key: 'day',
-    label: 'Last 90 Days',
-    caption: 'Daily rhythm across the last quarter',
+    label: t('ranges.last90Days'),
+    caption: t('ranges.caption.last90Days'),
     channel: 'get-days-records',
     duration: 60 * 60 * 24 * 1000 * 90,
   },
-];
+]);
 
-const activeRange = ref(ranges[0]);
+const activeRangeKey = ref<RangeKey>('minute');
+const activeRange = computed(
+  () => ranges.value.find((range) => range.key === activeRangeKey.value) ?? ranges.value[0]
+);
 const records = ref<ActivityRecord[]>([]);
 const loading = ref(false);
 const foregroundRecords = ref<ForegroundRecord[]>([]);
@@ -264,12 +255,10 @@ const refresh = async () => {
   if (!electron) {
     return;
   }
+  const range = activeRange.value;
   loading.value = true;
   try {
-    const data = await electron.invoke(
-      activeRange.value.channel,
-      activeRange.value.duration
-    );
+    const data = await electron.invoke(range.channel, range.duration);
     records.value = Array.isArray(data) ? data : [];
   } catch {
     records.value = [];
@@ -324,12 +313,12 @@ const refreshBackground = async () => {
   }
 };
 
-const setRange = (range: (typeof ranges)[number]) => {
-  activeRange.value = range;
+const setRange = (range: RangeItem) => {
+  activeRangeKey.value = range.key;
 };
 
 watch(
-  () => activeRange.value.key,
+  () => activeRangeKey.value,
   () => {
     refreshAll();
   }
@@ -362,14 +351,6 @@ const foregroundPercent = computed(() => {
     return 0;
   }
   return Math.round((totalForegroundSeconds.value / total) * 100);
-});
-
-const backgroundPercent = computed(() => {
-  const total = totalTrackedSeconds.value;
-  if (!total) {
-    return 0;
-  }
-  return Math.round((totalBackgroundSeconds.value / total) * 100);
 });
 
 const uniquePrograms = computed(() => {

@@ -1,33 +1,29 @@
 <template>
   <UApp>
-    <UDashboardGroup>
+    <UDashboardGroup unit="rem">
       <UDashboardSidebar
         class="app-sidebar"
         :collapsible="true"
         :resizable="false"
-        :min-size="18"
-        :default-size="20"
-        :collapsed-size="6"
+        :min-size="14"
+        :default-size="16"
+        :collapsed-size="5"
       >
         <template #header="{ collapsed }">
-          <div class="flex w-full items-center justify-between gap-2">
+          <div class="flex w-full items-center justify-between gap-2 py-2">
             <div class="flex items-center gap-2">
               <div
-                class="flex h-7 w-7 items-center justify-center rounded-md bg-muted/70 text-muted"
+                class="flex h-9 w-9 items-center justify-center rounded-md bg-muted/70 text-muted"
               >
-                <UIcon name="i-lucide-timer" class="h-4 w-4" />
+                <UIcon name="i-lucide-timer" class="h-5 w-5" />
               </div>
               <div
                 v-if="!collapsed"
                 class="text-[10px] uppercase tracking-[0.3em] text-muted"
               >
-                Active Time
+                {{ t('app.name') }}
               </div>
             </div>
-            <UDashboardSidebarCollapse
-              class="no-drag opacity-70 hover:opacity-100"
-              size="xs"
-            />
           </div>
         </template>
         <template #default="{ collapsed }">
@@ -55,6 +51,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import TitleBar from '@/components/TitleBar.vue';
 import SidebarNav from '@/components/SidebarNav.vue';
 import StatusBar from '@/components/StatusBar.vue';
@@ -71,6 +68,7 @@ const activeView = ref('dashboard');
 const theme = ref<ThemeMode>('system');
 let mediaQuery: MediaQueryList | null = null;
 const electron = useElectron();
+const { t } = useI18n();
 
 const handleMediaChange = () => {
   if (theme.value === 'system') {

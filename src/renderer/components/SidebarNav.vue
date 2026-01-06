@@ -18,13 +18,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
 defineProps<{ modelValue: string; collapsed?: boolean }>();
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>();
 
-const items = [
-  { key: 'dashboard', icon: 'i-lucide-activity', label: 'Dashboard' },
-  { key: 'processes', icon: 'i-lucide-app-window', label: 'Processes' },
-  { key: 'settings', icon: 'i-lucide-sliders-horizontal', label: 'Settings' },
-  { key: 'about', icon: 'i-lucide-info', label: 'About' },
-];
+const { t } = useI18n();
+
+const items = computed(() => [
+  { key: 'dashboard', icon: 'i-lucide-activity', label: t('nav.dashboard') },
+  { key: 'processes', icon: 'i-lucide-app-window', label: t('nav.processes') },
+  { key: 'settings', icon: 'i-lucide-sliders-horizontal', label: t('nav.settings') },
+  { key: 'about', icon: 'i-lucide-info', label: t('nav.about') },
+]);
 </script>

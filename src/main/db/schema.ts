@@ -80,3 +80,9 @@ export const backgroundMinuteRecords = sqliteTable(
     createdAt: text('createdAt'),
   }
 );
+
+export const markedPrograms = sqliteTable('marked_programs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  program: text('program').notNull(),
+  createdAt: text('createdAt'),
+});

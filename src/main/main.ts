@@ -40,9 +40,13 @@ const activeStatus = {
 const foregroundProgramCache = new Set<string>();
 const programLabelCache = new Map<string, string>();
 type ProgramIconCacheEntry = { data: string | null; updatedAt: number };
+type MarkedRunningInfo = { program: string; seconds: number };
 const programIconCache = new Map<string, ProgramIconCacheEntry>();
 const programPathCache = new Map<string, string>();
 const pidProgramCache = new Map<number, { name: string; cachedAt: number }>();
+const markedProgramCache = new Map<string, string>();
+const markedProgramSince = new Map<string, number>();
+let markedProgramsLoaded = false;
 const PATH_REFRESH_INTERVAL_MS = 60 * 1000;
 const PID_CACHE_TTL_MS = 5 * 60 * 1000;
 const ICON_MISS_TTL_MS = 10 * 60 * 1000;
@@ -74,6 +78,22 @@ const normalizeProgramLabel = (value?: string) => {
     return '';
   }
   return stripProgramExtension(value);
+};
+
+const normalizeMarkedProgramInput = (value: unknown) => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const label = normalizeProgramLabel(trimmed);
+  const key = normalizeProgramName(label);
+  if (!key) {
+    return null;
+  }
+  return { key, label: label || trimmed };
 };
 
 const resolveProgramNameByPid = async (pid?: number) => {
@@ -321,9 +341,127 @@ const loadForegroundPrograms = async () => {
   }
 };
 
+const loadMarkedPrograms = async () => {
+  markedProgramCache.clear();
+  try {
+    const programs = await DB.listMarkedPrograms();
+    programs.forEach((program) => {
+      const normalized = normalizeMarkedProgramInput(program);
+      if (!normalized) {
+        return;
+      }
+      markedProgramCache.set(normalized.key, normalized.label);
+    });
+    markedProgramsLoaded = true;
+    for (const key of markedProgramSince.keys()) {
+      if (!markedProgramCache.has(key)) {
+        markedProgramSince.delete(key);
+      }
+    }
+  } catch {
+    // Ignore mark hydration errors.
+  }
+};
+
+const ensureMarkedProgramsLoaded = async () => {
+  if (markedProgramsLoaded) {
+    return;
+  }
+  await loadMarkedPrograms();
+};
+
+const listMarkedPrograms = async () => {
+  await ensureMarkedProgramsLoaded();
+  return [...markedProgramCache.values()].sort((a, b) => a.localeCompare(b));
+};
+
+const addMarkedProgram = async (value: unknown) => {
+  const normalized = normalizeMarkedProgramInput(value);
+  if (!normalized) {
+    return false;
+  }
+  await ensureMarkedProgramsLoaded();
+  markedProgramCache.set(normalized.key, normalized.label);
+  await DB.addMarkedProgram(normalized.label);
+  return true;
+};
+
+const removeMarkedProgram = async (value: unknown) => {
+  const normalized = normalizeMarkedProgramInput(value);
+  if (!normalized) {
+    return false;
+  }
+  await ensureMarkedProgramsLoaded();
+  const storedLabel =
+    markedProgramCache.get(normalized.key) ?? normalized.label;
+  markedProgramCache.delete(normalized.key);
+  markedProgramSince.delete(normalized.key);
+  await DB.removeMarkedProgram(storedLabel);
+  return true;
+};
+
+const getMarkedRunningPrograms = async () => {
+  await ensureMarkedProgramsLoaded();
+  const markedCount = markedProgramCache.size;
+  if (!markedCount) {
+    return {
+      available: canTrackForeground(),
+      items: [] as MarkedRunningInfo[],
+      markedCount,
+    };
+  }
+  if (!canTrackForeground()) {
+    return { available: false, items: [] as MarkedRunningInfo[], markedCount };
+  }
+  const now = Date.now();
+  const runningPrograms = await listRunningProcessNames();
+  if (!runningPrograms.length) {
+    markedProgramSince.clear();
+    return { available: true, items: [] as MarkedRunningInfo[], markedCount };
+  }
+  const runningKeys = new Set<string>();
+  const runningLabels = new Map<string, string>();
+  runningPrograms.forEach((name) => {
+    const label = normalizeProgramLabel(name);
+    const key = normalizeProgramName(label);
+    if (!key) {
+      return;
+    }
+    runningKeys.add(key);
+    if (!runningLabels.has(key) && label) {
+      runningLabels.set(key, label);
+    }
+  });
+  markedProgramCache.forEach((_label, key) => {
+    if (!runningKeys.has(key)) {
+      return;
+    }
+    if (!markedProgramSince.has(key)) {
+      markedProgramSince.set(key, now);
+    }
+  });
+  for (const key of markedProgramSince.keys()) {
+    if (!runningKeys.has(key)) {
+      markedProgramSince.delete(key);
+    }
+  }
+  const items = [...markedProgramCache.entries()]
+    .filter(([key]) => runningKeys.has(key))
+    .map(([key, label]) => {
+      const since = markedProgramSince.get(key) ?? now;
+      const seconds = Math.max(0, Math.floor((now - since) / 1000));
+      return {
+        program: label || runningLabels.get(key) || label,
+        seconds,
+      };
+    })
+    .sort((a, b) => a.program.localeCompare(b.program));
+  return { available: true, items, markedCount };
+};
+
 const data: {
   closeable: boolean;
-  timer: NodeJS.Timer | null;
+  timer: ReturnType<typeof setInterval> | null;
 } = {
   closeable: false,
   timer: null,
@@ -468,6 +606,9 @@ function setIpcHandle(win: BrowserWindow) {
 
   ipcMain.handle('clean-db-data', async () => {
     await DB.cleanData();
+    markedProgramCache.clear();
+    markedProgramSince.clear();
+    markedProgramsLoaded = false;
   });
 
   ipcMain.handle('get-active-window', async () => {
@@ -572,6 +713,22 @@ function setIpcHandle(win: BrowserWindow) {
       result[name] = await resolveProgramIcon(name);
     }
     return result;
+  });
+
+  ipcMain.handle('get-marked-programs', async () => {
+    return listMarkedPrograms();
+  });
+
+  ipcMain.handle('add-marked-program', async (_, program: unknown) => {
+    return addMarkedProgram(program);
+  });
+
+  ipcMain.handle('remove-marked-program', async (_, program: unknown) => {
+    return removeMarkedProgram(program);
+  });
+
+  ipcMain.handle('get-marked-running-programs', async () => {
+    return getMarkedRunningPrograms();
   });
 }
 
@@ -716,6 +873,7 @@ async function start() {
   await loadIconCache();
   await DB.sync();
   await loadForegroundPrograms();
+  await loadMarkedPrograms();
   const win = await createWindow();
   setTray(win);
   detectActive();

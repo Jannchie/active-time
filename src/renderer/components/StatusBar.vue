@@ -10,17 +10,17 @@
         class="rounded-full"
         @click="toggleRecording"
       >
-        {{ recording ? 'Recording' : 'Paused' }}
+        {{ recording ? t('status.recording') : t('status.paused') }}
       </UButton>
       <UBadge color="neutral" variant="soft">
-        Storage {{ formatBytes(storageSize) }}
+        {{ t('status.storage', { size: formatBytes(storageSize) }) }}
       </UBadge>
     </div>
     <div class="flex min-w-0 flex-1 items-center gap-2 text-xs text-muted">
       <UIcon name="i-lucide-activity" class="h-4 w-4" />
       <div class="min-w-0">
         <div class="truncate">
-          Active: {{ activeLabel }}
+          {{ t('status.active', { label: activeLabel }) }}
         </div>
         <div class="truncate text-[11px]">
           {{ activeTimeLabel }}
@@ -28,9 +28,11 @@
       </div>
     </div>
     <div class="flex items-center gap-3 text-xs text-muted">
-      <span>Sample {{ checkInterval }}s</span>
+      <span>
+        {{ t('status.sample', { seconds: checkInterval, unit: t('common.secondsShort') }) }}
+      </span>
       <span class="hidden sm:inline">
-        Focus stays local. Data never leaves this device.
+        {{ t('status.privacy') }}
       </span>
     </div>
   </footer>
@@ -39,19 +41,22 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
-import { formatBytes } from '@/utils/format';
+import { formatBytes, formatDuration } from '@/utils/format';
 import { useElectron } from '@/composables/useElectron';
 import { useCheckInterval } from '@/composables/useCheckInterval';
+import { useI18n } from 'vue-i18n';
 
 const electron = useElectron();
 const recording = ref(true);
 const storageSize = ref<number | null>(null);
 let stopListener: (() => void) | undefined;
 const { checkInterval } = useCheckInterval();
+const { t } = useI18n();
 const activeStatus = ref<{
   available: boolean;
   program?: string;
   since?: number;
+  durationSeconds?: number;
 }>({
   available: false,
 });
@@ -72,26 +77,23 @@ const storageInterval = useIntervalFn(refreshStorage, 5000, {
   immediate: false,
 });
 
-const formatSince = (value?: number) => {
-  if (!value) {
-    return '--';
-  }
-  const date = new Date(value);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
-
 const activeLabel = computed(() => {
   if (!activeStatus.value.available) {
-    return 'Activity unavailable';
+    return t('status.activityUnavailable');
   }
-  return activeStatus.value.program || 'No active app';
+  return activeStatus.value.program || t('status.noActiveApp');
 });
 
 const activeTimeLabel = computed(() => {
-  if (!activeStatus.value.available || !activeStatus.value.since) {
-    return 'Started --';
+  if (
+    !activeStatus.value.available ||
+    activeStatus.value.durationSeconds === undefined
+  ) {
+    return t('status.runningUnknown');
   }
-  return `Started ${formatSince(activeStatus.value.since)}`;
+  return t('status.running', {
+    duration: formatDuration(activeStatus.value.durationSeconds),
+  });
 });
 
 const refreshActiveStatus = async () => {
@@ -101,10 +103,15 @@ const refreshActiveStatus = async () => {
   }
   try {
     const data = await electron.invoke('get-active-window');
+    const since = typeof data?.since === 'number' ? data.since : undefined;
     activeStatus.value = {
       available: Boolean(data?.available),
       program: data?.program,
-      since: typeof data?.since === 'number' ? data.since : undefined,
+      since,
+      durationSeconds:
+        typeof since === 'number'
+          ? Math.max(0, Math.floor((Date.now() - since) / 1000))
+          : undefined,
     };
   } catch {
     activeStatus.value = { available: false };

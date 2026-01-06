@@ -6,10 +6,22 @@
         size="xs"
       />
     </template>
-    <template #left>
-      <div class="text-sm font-semibold">
-        Active Time
-      </div>
+    <template #leading>
+      <UDashboardSidebarCollapse
+        class="no-drag opacity-70 hover:opacity-100"
+        size="xs"
+      />
+    </template>
+    <template #title>
+      <span class="text-sm font-semibold">
+        {{ t('app.name') }}
+      </span>
     </template>
   </UDashboardNavbar>
 </template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+</script>

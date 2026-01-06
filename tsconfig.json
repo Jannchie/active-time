@@ -3,7 +3,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
-    "module": "commonjs",
+    "module": "Node16",
     "lib": [
       "dom",
       "es2021"
@@ -24,7 +24,8 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
@@ -32,7 +33,9 @@
     "outDir": "release/app/dist",
   },
   "exclude": [
+    "src/__tests__",
     "test",
+    "eslint.config.mjs",
     "release/build",
     "release/app/dist",
     ".erb/dll"

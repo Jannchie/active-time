@@ -1,18 +1,18 @@
 <template>
   <div class="space-y-4">
     <section>
-      <h1 class="text-xl font-semibold">Studio Settings</h1>
+      <h1 class="text-xl font-semibold">{{ t('settings.title') }}</h1>
       <p class="text-sm text-muted">
-        Tune the workspace ambience and startup behavior.
+        {{ t('settings.description') }}
       </p>
     </section>
 
     <section class="panel">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold">Theme</h2>
+          <h2 class="text-lg font-semibold">{{ t('settings.theme.title') }}</h2>
           <p class="text-xs text-muted">
-            Pick a mood for the dashboard.
+            {{ t('settings.theme.description') }}
           </p>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -22,7 +22,7 @@
             color="neutral"
             @click="emit('update:theme', 'dark')"
           >
-            Dark
+            {{ t('common.dark') }}
           </UButton>
           <UButton
             size="xs"
@@ -30,7 +30,7 @@
             color="neutral"
             @click="emit('update:theme', 'light')"
           >
-            Light
+            {{ t('common.light') }}
           </UButton>
           <UButton
             size="xs"
@@ -38,7 +38,7 @@
             color="neutral"
             @click="emit('update:theme', 'system')"
           >
-            System
+            {{ t('common.system') }}
           </UButton>
         </div>
       </div>
@@ -47,9 +47,9 @@
     <section class="panel">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="text-lg font-semibold">Sampling Interval</h2>
+          <h2 class="text-lg font-semibold">{{ t('settings.interval.title') }}</h2>
           <p class="text-xs text-muted">
-            Sync data collection and refresh cadence.
+            {{ t('settings.interval.description') }}
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -60,10 +60,10 @@
             :max="MAX_CHECK_INTERVAL"
             step="1"
             class="h-9 w-20 rounded-md border border-muted bg-transparent px-2 text-xs text-right"
-          />
-          <span class="text-xs text-muted">s</span>
+          >
+          <span class="text-xs text-muted">{{ t('common.secondsShort') }}</span>
           <UButton size="xs" color="neutral" variant="solid" @click="applyInterval">
-            Apply
+            {{ t('common.apply') }}
           </UButton>
         </div>
       </div>
@@ -76,10 +76,10 @@
           :variant="intervalInput === preset ? 'solid' : 'ghost'"
           @click="applyPreset(preset)"
         >
-          {{ preset }}s
+          {{ preset }}{{ t('common.secondsShort') }}
         </UButton>
         <span class="text-[11px] text-muted">
-          Range {{ MIN_CHECK_INTERVAL }}-{{ MAX_CHECK_INTERVAL }}s
+          {{ t('common.range', { min: MIN_CHECK_INTERVAL, max: MAX_CHECK_INTERVAL, unit: t('common.secondsShort') }) }}
         </span>
       </div>
     </section>
@@ -87,9 +87,32 @@
     <section class="panel">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold">Auto Start</h2>
+          <h2 class="text-lg font-semibold">{{ t('settings.language.title') }}</h2>
           <p class="text-xs text-muted">
-            Launch Active Time when your system boots.
+            {{ t('settings.language.description') }}
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <UButton
+            v-for="option in localeOptions"
+            :key="option.value"
+            size="xs"
+            :variant="locale === option.value ? 'solid' : 'ghost'"
+            color="neutral"
+            @click="setAppLocale(option.value)"
+          >
+            {{ option.label }}
+          </UButton>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold">{{ t('settings.autoStart.title') }}</h2>
+          <p class="text-xs text-muted">
+            {{ t('settings.autoStart.description') }}
           </p>
         </div>
         <div class="flex gap-2">
@@ -99,7 +122,7 @@
             color="neutral"
             @click="setAutoStart(true)"
           >
-            Enabled
+            {{ t('common.enabled') }}
           </UButton>
           <UButton
             size="xs"
@@ -107,7 +130,7 @@
             color="neutral"
             @click="setAutoStart(false)"
           >
-            Disabled
+            {{ t('common.disabled') }}
           </UButton>
         </div>
       </div>
@@ -116,13 +139,13 @@
     <section class="panel">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold">Danger Zone</h2>
+          <h2 class="text-lg font-semibold">{{ t('settings.danger.title') }}</h2>
           <p class="text-xs text-muted">
-            Reset all locally stored activity data.
+            {{ t('settings.danger.description') }}
           </p>
         </div>
         <UButton color="neutral" variant="outline" @click="showModal = true">
-          Wipe Data
+          {{ t('settings.danger.action') }}
         </UButton>
       </div>
     </section>
@@ -131,17 +154,17 @@
       <div class="panel space-y-3">
         <div class="flex items-center gap-2">
           <UIcon name="i-lucide-triangle-alert" class="h-5 w-5" />
-          <h3 class="text-lg font-semibold">Delete all data?</h3>
+          <h3 class="text-lg font-semibold">{{ t('settings.danger.modalTitle') }}</h3>
         </div>
         <div class="text-sm text-muted">
-          This will permanently remove every activity record stored on this device.
+          {{ t('settings.danger.modalDescription') }}
         </div>
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" color="neutral" @click="showModal = false">
-            Cancel
+            {{ t('common.cancel') }}
           </UButton>
           <UButton color="neutral" variant="solid" @click="confirmWipe">
-            Delete
+            {{ t('common.delete') }}
           </UButton>
         </div>
       </div>
@@ -150,9 +173,12 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useElectron } from '@/composables/useElectron';
 import { useCheckInterval } from '@/composables/useCheckInterval';
+import { setLocale } from '@/i18n';
+import type { AppLocale } from '@/i18n';
+import { useI18n } from 'vue-i18n';
 
 type LoginItemSettings = {
   executableWillLaunchAtLogin: boolean;
@@ -170,6 +196,7 @@ defineProps<{ theme: ThemeMode }>();
 const emit = defineEmits<{ (e: 'update:theme', value: ThemeMode): void }>();
 
 const electron = useElectron();
+const { t, locale } = useI18n();
 const loginSettings = ref<LoginItemSettings | null>(null);
 const showModal = ref(false);
 let stopListener: (() => void) | undefined;
@@ -178,6 +205,15 @@ const MIN_CHECK_INTERVAL = 1;
 const MAX_CHECK_INTERVAL = 60;
 const intervalPresets = [1, 2, 5, 10, 15];
 const intervalInput = ref(checkInterval.value);
+
+const localeOptions = computed(() => [
+  { value: 'en' as AppLocale, label: t('language.english') },
+  { value: 'zh-CN' as AppLocale, label: t('language.simplifiedChinese') },
+]);
+
+const setAppLocale = (value: AppLocale) => {
+  setLocale(value);
+};
 
 const setAutoStart = async (value: boolean) => {
   if (!electron) {

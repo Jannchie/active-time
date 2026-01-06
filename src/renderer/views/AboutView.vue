@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-4">
     <section>
-      <h1 class="text-xl font-semibold">About Active Time</h1>
+      <h1 class="text-xl font-semibold">{{ t('about.title') }}</h1>
       <p class="text-sm text-muted">
-        A local-first focus tracker built for calm productivity.
+        {{ t('about.description') }}
       </p>
     </section>
 
@@ -16,11 +16,11 @@
         </div>
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-[0.3em] text-muted">
-            Version {{ packageInfo.version }}
+            {{ t('common.version', { version: packageInfo.version }) }}
           </div>
-          <div class="text-xl font-semibold">Active Time</div>
+          <div class="text-xl font-semibold">{{ t('app.name') }}</div>
           <div class="text-sm text-muted">
-            Made by Jianqi Pan. Crafted for focused work habits.
+            {{ t('about.madeBy') }}
           </div>
         </div>
         <div class="flex-1" />
@@ -31,30 +31,30 @@
           variant="outline"
         >
           <UIcon name="i-lucide-github" class="h-4 w-4" />
-          GitHub
+          {{ t('about.github') }}
         </UButton>
       </div>
     </section>
 
     <section class="panel">
-      <h2 class="text-lg font-semibold">What it tracks</h2>
+      <h2 class="text-lg font-semibold">{{ t('about.tracks.title') }}</h2>
       <div class="mt-3 grid gap-3 md:grid-cols-3">
         <div class="rounded-lg bg-muted px-3 py-2">
-          <div class="text-sm font-semibold">Apps</div>
+          <div class="text-sm font-semibold">{{ t('about.tracks.apps.title') }}</div>
           <div class="text-xs text-muted">
-            Time spent across active applications.
+            {{ t('about.tracks.apps.description') }}
           </div>
         </div>
         <div class="rounded-lg bg-muted px-3 py-2">
-          <div class="text-sm font-semibold">Presence</div>
+          <div class="text-sm font-semibold">{{ t('about.tracks.presence.title') }}</div>
           <div class="text-xs text-muted">
-            Foreground and background presence by app.
+            {{ t('about.tracks.presence.description') }}
           </div>
         </div>
         <div class="rounded-lg bg-muted px-3 py-2">
-          <div class="text-sm font-semibold">Activity</div>
+          <div class="text-sm font-semibold">{{ t('about.tracks.activity.title') }}</div>
           <div class="text-xs text-muted">
-            Keyboard and mouse activity signals.
+            {{ t('about.tracks.activity.description') }}
           </div>
         </div>
       </div>
@@ -64,6 +64,9 @@
 
 <script setup lang="ts">
 import packageInfo from '../../../release/app/package.json';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const LogoMark = {
   template: `<svg viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">

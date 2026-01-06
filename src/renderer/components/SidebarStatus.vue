@@ -4,26 +4,35 @@
       v-if="!collapsed"
       class="text-[10px] uppercase tracking-[0.3em] text-muted"
     >
-      Active App
+      {{ t('sidebar.activeApp') }}
     </div>
-    <div class="flex items-center gap-2 text-xs">
-      <div
-        class="h-2 w-2 rounded-full bg-current"
-        :class="status.available ? 'opacity-100' : 'opacity-40'"
-      />
-      <div v-if="!collapsed" class="min-w-0 flex-1">
-        <div class="truncate font-medium">
-          {{ statusLabel }}
-        </div>
-        <div class="truncate text-[11px] text-muted">
-          {{ timeLabel }}
+    <div v-if="collapsed" class="flex items-center gap-2 text-xs">
+      <UIcon name="i-lucide-activity" class="h-4 w-4 text-muted" />
+    </div>
+    <div v-else class="space-y-2 text-xs">
+      <div v-if="!status.available" class="text-muted">
+        {{ t('status.activityUnavailable') }}
+      </div>
+      <div v-else-if="!items.length" class="text-muted">
+        {{ emptyMessage }}
+      </div>
+      <div v-else class="space-y-2">
+        <div
+          v-for="item in items"
+          :key="item.program"
+          class="flex items-center gap-2"
+        >
+          <div class="h-2 w-2 rounded-full bg-current" />
+          <div class="min-w-0 flex-1">
+            <div class="truncate font-medium">
+              {{ item.program }}
+            </div>
+            <div class="truncate text-[11px] text-muted">
+              {{ timeLabel(item.seconds) }}
+            </div>
+          </div>
         </div>
       </div>
-      <UIcon
-        v-else
-        name="i-lucide-activity"
-        class="h-4 w-4 text-muted"
-      />
     </div>
     <div
       v-if="!collapsed"
@@ -38,54 +47,73 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
 import { useElectron } from '@/composables/useElectron';
+import { useI18n } from 'vue-i18n';
+import { formatDuration } from '@/utils/format';
 
 const { collapsed } = defineProps<{ collapsed?: boolean }>();
 const electron = useElectron();
+const { t } = useI18n();
+
+type MarkedApp = { program: string; seconds: number };
 
 const status = ref<{
   available: boolean;
-  program?: string;
-  since?: number;
+  items: MarkedApp[];
+  markedCount: number;
 }>({
   available: false,
+  items: [],
+  markedCount: 0,
 });
 
-const formatSince = (value?: number) => {
-  if (!value) {
-    return '--';
+const normalizeItems = (items: unknown): MarkedApp[] => {
+  if (!Array.isArray(items)) {
+    return [];
   }
-  const date = new Date(value);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return items
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const record = item as { program?: unknown; seconds?: unknown };
+      const program =
+        typeof record.program === 'string' ? record.program.trim() : '';
+      if (!program) {
+        return null;
+      }
+      const seconds = Number(record.seconds ?? 0);
+      return {
+        program,
+        seconds: Number.isFinite(seconds) ? Math.max(0, seconds) : 0,
+      };
+    })
+    .filter((item): item is MarkedApp => Boolean(item));
 };
 
-const statusLabel = computed(() => {
-  if (!status.value.available) {
-    return 'Activity unavailable';
-  }
-  return status.value.program || 'No active app';
-});
+const items = computed(() => status.value.items);
+const emptyMessage = computed(() =>
+  status.value.markedCount > 0
+    ? t('sidebar.markedInactive')
+    : t('sidebar.markedEmpty')
+);
 
-const timeLabel = computed(() => {
-  if (!status.value.available || !status.value.since) {
-    return 'Started --';
-  }
-  return `Started ${formatSince(status.value.since)}`;
-});
+const timeLabel = (seconds: number) =>
+  t('status.running', { duration: formatDuration(seconds) });
 
 const refreshStatus = async () => {
   if (!electron) {
-    status.value = { available: false };
+    status.value = { available: false, items: [], markedCount: 0 };
     return;
   }
   try {
-    const data = await electron.invoke('get-active-window');
+    const data = await electron.invoke('get-marked-running-programs');
     status.value = {
       available: Boolean(data?.available),
-      program: data?.program,
-      since: typeof data?.since === 'number' ? data.since : undefined,
+      items: normalizeItems(data?.items),
+      markedCount: Number(data?.markedCount ?? 0),
     };
   } catch {
-    status.value = { available: false };
+    status.value = { available: false, items: [], markedCount: 0 };
   }
 };
 

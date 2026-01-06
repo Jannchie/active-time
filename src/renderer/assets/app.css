@@ -35,7 +35,19 @@
     'Berkeley Mono', 'Noto Serif SC', 'Songti SC', 'Noto Serif', serif;
   --font-title-ja:
     'Berkeley Mono', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --font-display: var(--font-display-latin);
+  --font-title: var(--font-title-latin);
   --ui-header-height: 40px;
+}
+
+:root:lang(zh) {
+  --font-display: var(--font-display-zh);
+  --font-title: var(--font-title-zh);
+}
+
+:root:lang(ja) {
+  --font-display: var(--font-display-ja);
+  --font-title: var(--font-title-ja);
 }
 
 *,
@@ -45,7 +57,7 @@
 }
 
 body {
-  font-family: var(--font-display-latin);
+  font-family: var(--font-display);
   color: var(--ui-text);
   background-color: var(--ui-bg);
   min-height: 100vh;

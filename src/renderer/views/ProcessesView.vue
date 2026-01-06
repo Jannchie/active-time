@@ -2,9 +2,9 @@
   <div class="space-y-4">
     <section class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-xl font-semibold">App Breakdown</h1>
+        <h1 class="text-xl font-semibold">{{ t('processes.title') }}</h1>
         <p class="text-sm text-muted">
-          Foreground and background presence per app.
+          {{ t('processes.description') }}
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -22,49 +22,27 @@
       </div>
     </section>
 
-    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <section class="grid gap-3 md:grid-cols-2">
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Total Time
-        </div>
-        <div class="text-2xl font-semibold mt-2">
-          {{ formatDuration(totalTrackedSeconds) }}
-        </div>
-        <div class="text-xs text-muted mt-1">
-          {{ activeRange.caption }}
-        </div>
-      </div>
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Foreground Time
+          {{ t('processes.metrics.foregroundTime') }}
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ formatDuration(totalForegroundSeconds) }}
         </div>
         <div class="text-xs text-muted mt-1">
-          Time in front of you.
+          {{ t('processes.metrics.foregroundHint') }}
         </div>
       </div>
       <div class="panel">
         <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Background Time
-        </div>
-        <div class="text-2xl font-semibold mt-2">
-          {{ formatDuration(totalBackgroundSeconds) }}
-        </div>
-        <div class="text-xs text-muted mt-1">
-          Running behind the scenes.
-        </div>
-      </div>
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          Tracked Apps
+          {{ t('processes.metrics.trackedApps') }}
         </div>
         <div class="text-2xl font-semibold mt-2">
           {{ uniquePrograms }}
         </div>
         <div class="text-xs text-muted mt-1">
-          Foreground or background records.
+          {{ t('processes.metrics.trackedAppsHint') }}
         </div>
       </div>
     </section>
@@ -72,25 +50,23 @@
     <section class="panel">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="text-lg font-semibold">App Detail</h2>
+          <h2 class="text-lg font-semibold">{{ t('processes.detail.title') }}</h2>
           <p class="text-xs text-muted">
-            Totals, split, and last seen per app.
+            {{ t('processes.detail.description') }}
           </p>
         </div>
         <UBadge color="neutral" variant="soft">{{ processRows.length }}</UBadge>
       </div>
       <div class="mt-2 text-xs text-muted">
-        Sorted by {{ sortLabel }}
+        {{ t('processes.sortedBy', { sort: sortLabel }) }}
       </div>
       <div v-if="processRows.length" class="mt-4 space-y-2">
         <div
-          class="grid grid-cols-[minmax(0,1fr)_84px_84px_84px_120px] items-center gap-4 text-[11px] uppercase tracking-[0.2em] text-muted"
+          class="grid grid-cols-[minmax(0,1fr)_84px_120px] items-center gap-4 text-[11px] uppercase tracking-[0.2em] text-muted"
         >
-          <span>Process</span>
-          <span class="text-right">Total</span>
-          <span class="text-right">Foreground</span>
-          <span class="text-right">Background</span>
-          <span class="text-right">Last Seen</span>
+          <span>{{ t('processes.table.process') }}</span>
+          <span class="text-right">{{ t('processes.table.foreground') }}</span>
+          <span class="text-right">{{ t('processes.table.lastSeen') }}</span>
         </div>
         <div
           v-for="row in processRows"
@@ -98,9 +74,20 @@
           class="space-y-2 rounded-lg bg-muted px-3 py-2 text-xs"
         >
           <div
-            class="grid grid-cols-[minmax(0,1fr)_84px_84px_84px_120px] items-center gap-4"
+            class="grid grid-cols-[minmax(0,1fr)_84px_120px] items-center gap-4"
           >
             <div class="flex min-w-0 items-center gap-2">
+              <button
+                type="button"
+                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-transparent text-muted transition hover:border-muted/60 hover:text-foreground"
+                :class="isMarked(row.name) ? 'text-amber-400' : ''"
+                :title="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
+                :aria-label="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
+                :aria-pressed="isMarked(row.name)"
+                @click="toggleMarked(row.name)"
+              >
+                <UIcon name="i-lucide-star" class="h-3.5 w-3.5" />
+              </button>
               <div
                 class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted/70"
               >
@@ -109,22 +96,16 @@
                   :src="iconMap[row.name]"
                   alt=""
                   class="h-4 w-4"
-                />
+                >
                 <div
                   v-else
                   class="h-4 w-4 rounded bg-muted-foreground/30"
-                ></div>
+                />
               </div>
               <div class="truncate font-medium">{{ row.name }}</div>
             </div>
             <div class="text-right text-muted tabular-nums">
-              {{ formatDuration(row.total) }}
-            </div>
-            <div class="text-right text-muted tabular-nums">
               {{ formatDuration(row.foreground) }}
-            </div>
-            <div class="text-right text-muted tabular-nums">
-              {{ formatDuration(row.background) }}
             </div>
             <div class="text-right text-muted tabular-nums">
               {{ row.lastSeen ? formatTimestamp(row.lastSeen) : '--' }}
@@ -140,14 +121,12 @@
         </div>
       </div>
       <div v-else class="mt-4 text-xs text-muted">
-        {{
-          loading ? 'Reading process stats...' : 'No process time recorded yet.'
-        }}
+        {{ loading ? t('processes.loading') : t('processes.empty') }}
       </div>
     </section>
 
     <section v-if="loading" class="text-sm text-muted">
-      Syncing process stats...
+      {{ t('processes.syncing') }}
     </section>
   </div>
 </template>
@@ -157,6 +136,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { formatDuration, formatTimestamp } from '@/utils/format';
 import { useElectron } from '@/composables/useElectron';
 import { useCheckInterval } from '@/composables/useCheckInterval';
+import { useI18n } from 'vue-i18n';
 
 type ForegroundRecord = {
   program?: string;
@@ -172,39 +152,108 @@ type BackgroundRecord = {
 
 const electron = useElectron();
 const { checkInterval } = useCheckInterval();
+const { t } = useI18n();
 
-const ranges = [
+type RangeKey = 'minute' | 'hour' | 'day';
+type RangeItem = {
+  key: RangeKey;
+  label: string;
+  caption: string;
+  duration: number;
+};
+
+const ranges = computed<RangeItem[]>(() => [
   {
     key: 'minute',
-    label: 'Last Hour',
-    caption: 'Rolling 60 minutes of activity',
+    label: t('ranges.lastHour'),
+    caption: t('ranges.caption.lastHour'),
     duration: 60 * 60 * 1000,
   },
   {
     key: 'hour',
-    label: 'Last 3 Days',
-    caption: 'Highlights for the past 72 hours',
+    label: t('ranges.last3Days'),
+    caption: t('ranges.caption.last3Days'),
     duration: 60 * 60 * 72 * 1000,
   },
   {
     key: 'day',
-    label: 'Last 90 Days',
-    caption: 'Daily rhythm across the last quarter',
+    label: t('ranges.last90Days'),
+    caption: t('ranges.caption.last90Days'),
     duration: 60 * 60 * 24 * 1000 * 90,
   },
-];
+]);
 
-const activeRange = ref(ranges[0]);
+const activeRangeKey = ref<RangeKey>('minute');
+const activeRange = computed(
+  () => ranges.value.find((range) => range.key === activeRangeKey.value) ?? ranges.value[0]
+);
 const foregroundRecords = ref<ForegroundRecord[]>([]);
 const backgroundRecords = ref<BackgroundRecord[]>([]);
 const loading = ref(false);
-const sortLabel = computed(() => 'Foreground');
+const sortLabel = computed(() => t('processes.sort.foreground'));
 const iconMap = ref<Record<string, string | null>>({});
 const iconLastAttempt = ref<Record<string, number>>({});
+const markedPrograms = ref<Set<string>>(new Set());
 let iconLookupAvailable = true;
 let iconRetryTimer: ReturnType<typeof setTimeout> | null = null;
 const ICON_RETRY_MS = 5 * 60 * 1000;
 const ICON_FAILURE_BACKOFF_MS = 30 * 1000;
+
+const normalizeName = (value: string) => value.trim().toLowerCase();
+
+const refreshMarkedPrograms = async () => {
+  if (!electron) {
+    markedPrograms.value = new Set();
+    return;
+  }
+  try {
+    const data = await electron.invoke('get-marked-programs');
+    const next = new Set<string>();
+    if (Array.isArray(data)) {
+      data.forEach((name) => {
+        if (typeof name !== 'string') {
+          return;
+        }
+        const key = normalizeName(name);
+        if (key) {
+          next.add(key);
+        }
+      });
+    }
+    markedPrograms.value = next;
+  } catch {
+    markedPrograms.value = new Set();
+  }
+};
+
+const isMarked = (name: string) => markedPrograms.value.has(normalizeName(name));
+
+const toggleMarked = async (name: string) => {
+  if (!electron) {
+    return;
+  }
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return;
+  }
+  const key = normalizeName(trimmed);
+  const next = new Set(markedPrograms.value);
+  const alreadyMarked = next.has(key);
+  if (alreadyMarked) {
+    next.delete(key);
+  } else {
+    next.add(key);
+  }
+  markedPrograms.value = next;
+  try {
+    await electron.invoke(
+      alreadyMarked ? 'remove-marked-program' : 'add-marked-program',
+      trimmed
+    );
+  } catch {
+    refreshMarkedPrograms();
+  }
+};
 
 const foregroundChannels = {
   minute: 'get-foreground-minutes-records',
@@ -226,12 +275,13 @@ const refresh = async () => {
     iconLastAttempt.value = {};
     return;
   }
+  const range = activeRange.value;
   loading.value = true;
   const foregroundChannel = foregroundChannels[activeRange.value.key];
   const backgroundChannel = backgroundChannels[activeRange.value.key];
   const [foregroundResult, backgroundResult] = await Promise.allSettled([
-    electron.invoke(foregroundChannel, activeRange.value.duration),
-    electron.invoke(backgroundChannel, activeRange.value.duration),
+    electron.invoke(foregroundChannel, range.duration),
+    electron.invoke(backgroundChannel, range.duration),
   ]);
   foregroundRecords.value =
     foregroundResult.status === 'fulfilled' &&
@@ -247,10 +297,9 @@ const refresh = async () => {
   void refreshIcons(processRows.value.map((row) => row.name));
 };
 
-const setRange = (range: (typeof ranges)[number]) => {
-  activeRange.value = range;
+const setRange = (range: RangeItem) => {
+  activeRangeKey.value = range.key;
 };
-
 
 const refreshIcons = async (names: string[]) => {
   if (!electron) {
@@ -316,7 +365,7 @@ const refreshIcons = async (names: string[]) => {
 };
 
 watch(
-  () => activeRange.value.key,
+  () => activeRangeKey.value,
   () => {
     refresh();
   }
@@ -329,14 +378,6 @@ watch(checkInterval, () => {
 
 const totalForegroundSeconds = computed(() =>
   foregroundRecords.value.reduce((sum, record) => sum + (record.seconds ?? 0), 0)
-);
-
-const totalBackgroundSeconds = computed(() =>
-  backgroundRecords.value.reduce((sum, record) => sum + (record.seconds ?? 0), 0)
-);
-
-const totalTrackedSeconds = computed(
-  () => totalForegroundSeconds.value + totalBackgroundSeconds.value
 );
 
 const uniquePrograms = computed(() => {
@@ -395,7 +436,6 @@ const processRows = computed(() => {
   const resolveSortValue = (row: { foreground: number }) => row.foreground;
   const rows = Array.from(totals.entries())
     .map(([name, values]) => {
-      const total = values.foreground + values.background;
       const sortValue = resolveSortValue({
         foreground: values.foreground,
       });
@@ -403,15 +443,14 @@ const processRows = computed(() => {
         name,
         foreground: values.foreground,
         background: values.background,
-        total,
         lastSeen: values.lastSeen,
         sortValue,
       };
     });
-  const maxSortValue = rows.reduce(
-    (max, row) => Math.max(max, row.sortValue),
-    0
-  );
+  let maxSortValue = 0;
+  rows.forEach((row) => {
+    maxSortValue = Math.max(maxSortValue, row.sortValue);
+  });
   return rows
     .sort((a, b) => {
       if (a.sortValue === b.sortValue) {
@@ -445,6 +484,7 @@ const stopInterval = () => {
 
 onMounted(() => {
   refresh();
+  refreshMarkedPrograms();
   startInterval();
 });
 

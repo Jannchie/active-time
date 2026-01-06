@@ -1,0 +1,179 @@
+{
+  "app": {
+    "name": "Active Time"
+  },
+  "nav": {
+    "dashboard": "概览",
+    "processes": "进程",
+    "settings": "设置",
+    "about": "关于"
+  },
+  "sidebar": {
+    "activeApp": "当前应用",
+    "markedEmpty": "???????????",
+    "markedInactive": "??????????"
+  },
+  "status": {
+    "recording": "记录中",
+    "paused": "已暂停",
+    "storage": "存储 {size}",
+    "active": "活动：{label}",
+    "sample": "采样 {seconds}{unit}",
+    "privacy": "专注数据仅保存在本地，不会离开此设备。",
+    "activityUnavailable": "活动不可用",
+    "noActiveApp": "暂无活动应用",
+    "started": "开始于 {time}",
+    "startedUnknown": "开始于 --",
+    "running": "?? {duration}",
+    "runningUnknown": "?? --"
+  },
+  "common": {
+    "apply": "应用",
+    "cancel": "取消",
+    "delete": "删除",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "dark": "深色",
+    "light": "浅色",
+    "system": "跟随系统",
+    "range": "范围 {min}-{max}{unit}",
+    "secondsShort": "秒",
+    "top": "前 {count}",
+    "unknown": "未知",
+    "total": "总计",
+    "foreground": "前台",
+    "background": "后台",
+    "lastSeen": "最近出现",
+    "process": "应用",
+    "version": "版本 {version}"
+  },
+  "time": {
+    "hoursMinutes": "{hours}小时{minutes}分",
+    "minutesSeconds": "{minutes}分{seconds}秒",
+    "seconds": "{seconds}秒"
+  },
+  "ranges": {
+    "lastHour": "最近 1 小时",
+    "last3Days": "最近 3 天",
+    "last90Days": "最近 90 天",
+    "caption": {
+      "lastHour": "滚动 60 分钟活动",
+      "last3Days": "过去 72 小时概览",
+      "last90Days": "过去一季的每日节奏"
+    }
+  },
+  "dashboard": {
+    "title": "专注概览",
+    "description": "了解所选时间范围内的活动情况。",
+    "metrics": {
+      "activeInput": "有效操作",
+      "foregroundTime": "前台时间",
+      "backgroundTime": "后台时间",
+      "appsSeen": "出现的应用",
+      "foregroundHint": "应用停留在前台的时间。",
+      "backgroundHint": "失焦时仍在运行。",
+      "appsSeenHint": "此范围内有活动的应用数。"
+    },
+    "focusSplit": {
+      "title": "专注表现",
+      "description": "所选范围内的前台专注表现。",
+      "activeInputLogged": "记录的有效操作：{duration}。"
+    },
+    "topApps": {
+      "title": "专注应用排行",
+      "description": "按有效操作时间排序。",
+      "empty": "正在收集最新活动记录..."
+    },
+    "activityLog": {
+      "title": "活动日志",
+      "description": "所选范围内的最新输入记录。",
+      "empty": "暂无活动记录。"
+    },
+    "syncing": "正在同步最新记录..."
+  },
+  "processes": {
+    "title": "应用分布",
+    "description": "每个应用的前台占用情况。",
+    "metrics": {
+      "totalTime": "总时间",
+      "foregroundTime": "前台时间",
+      "backgroundTime": "后台时间",
+      "trackedApps": "跟踪应用",
+      "foregroundHint": "在你面前的时间。",
+      "backgroundHint": "后台运行的时间。",
+      "trackedAppsHint": "有前台记录的应用。"
+    },
+    "detail": {
+      "title": "应用详情",
+      "description": "每个应用的前台时间与最近出现。"
+    },
+    "mark": "??",
+    "unmark": "????",
+    "sortedBy": "排序依据：{sort}",
+    "table": {
+      "process": "应用",
+      "total": "总计",
+      "foreground": "前台",
+      "background": "后台",
+      "lastSeen": "最近出现"
+    },
+    "loading": "正在读取进程统计...",
+    "empty": "暂无进程时间记录。",
+    "syncing": "正在同步进程统计...",
+    "sort": {
+      "foreground": "前台"
+    }
+  },
+  "settings": {
+    "title": "工作室设置",
+    "description": "调整工作区氛围和启动行为。",
+    "theme": {
+      "title": "主题",
+      "description": "为仪表盘选择氛围。"
+    },
+    "interval": {
+      "title": "采样间隔",
+      "description": "同步数据采集与刷新节奏。"
+    },
+    "autoStart": {
+      "title": "开机自启",
+      "description": "系统启动时自动运行 Active Time。"
+    },
+    "danger": {
+      "title": "危险区域",
+      "description": "重置所有本地保存的活动数据。",
+      "action": "清空数据",
+      "modalTitle": "删除所有数据？",
+      "modalDescription": "这将永久删除此设备上的全部活动记录。"
+    },
+    "language": {
+      "title": "语言",
+      "description": "切换界面语言。"
+    }
+  },
+  "about": {
+    "title": "关于 Active Time",
+    "description": "一款本地优先的专注记录工具。",
+    "madeBy": "由 Jianqi Pan 制作，为专注工作习惯而生。",
+    "github": "GitHub",
+    "tracks": {
+      "title": "追踪内容",
+      "apps": {
+        "title": "应用",
+        "description": "应用的活跃使用时间。"
+      },
+      "presence": {
+        "title": "前后台",
+        "description": "应用的前台与后台驻留情况。"
+      },
+      "activity": {
+        "title": "活动",
+        "description": "键盘与鼠标活动信号。"
+      }
+    }
+  },
+  "language": {
+    "english": "English",
+    "simplifiedChinese": "简体中文"
+  }
+}
