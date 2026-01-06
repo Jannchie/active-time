@@ -1,3 +1,129 @@
+## v0.4.0
+
+[v0.3.0...v0.4.0](https://github.com/Jannchie/active-time/compare/v0.3.0...v0.4.0)
+
+### :rocket: Breaking Changes
+
+- **activity-db**: remove title column from activity records and update related schema and ui - By [Jianqi Pan](mailto:jannchie@gmail.com) in [a4c5bf2](https://github.com/Jannchie/active-time/commit/a4c5bf2)
+- **db**: migrate to drizzle-orm and better-sqlite3 - By [Jianqi Pan](mailto:jannchie@gmail.com) in [0e77256](https://github.com/Jannchie/active-time/commit/0e77256)
+- **renderer**: migrate renderer from react to vue + nuxt ui - By [Jianqi Pan](mailto:jannchie@gmail.com) in [f8c41b6](https://github.com/Jannchie/active-time/commit/f8c41b6)
+
+### :sparkles: Features
+
+- **background-tracking**: add background app time tracking and display - By [Jianqi Pan](mailto:jannchie@gmail.com) in [e22aaf8](https://github.com/Jannchie/active-time/commit/e22aaf8)
+- **i18n**: add multi-language support with vue-i18n and integrate app/locale switching - By [Jianqi Pan](mailto:jannchie@gmail.com) in [5c72542](https://github.com/Jannchie/active-time/commit/5c72542)
+- **processes**: replace native process lookups with node native addon && add icon cache to disk && enhance process view sorting - By [Jianqi Pan](mailto:jannchie@gmail.com) in [206439c](https://github.com/Jannchie/active-time/commit/206439c)
+- **processes**: add processes view and app icon support && implement foreground/background program tracking && add adjustable sampling interval - By [Jianqi Pan](mailto:jannchie@gmail.com) in [66276fe](https://github.com/Jannchie/active-time/commit/66276fe)
+
+## v0.3.0
+
+[v0.2.3...v0.3.0](https://github.com/Jannchie/active-time/compare/v0.2.3...v0.3.0)
+
+### :sparkles: Features
+
+- start on boot - By [Jannchie](mailto:jannchie@gmail.com) in [69a90d7](https://github.com/Jannchie/active-time/commit/69a90d7)
+
+## v0.2.3
+
+[v0.2.2...v0.2.3](https://github.com/Jannchie/active-time/compare/v0.2.2...v0.2.3)
+
+### :sparkles: Features
+
+- update package - By [Jannchie](mailto:jannchie@gmail.com) in [deb4f7b](https://github.com/Jannchie/active-time/commit/deb4f7b)
+
+### :adhesive_bandage: Fixes
+
+- time format - By [Jannchie](mailto:jannchie@gmail.com) in [aee54ef](https://github.com/Jannchie/active-time/commit/aee54ef)
+
+## v0.2.2
+
+[v0.2.1...v0.2.2](https://github.com/Jannchie/active-time/compare/v0.2.1...v0.2.2)
+
+### :adhesive_bandage: Fixes
+
+- time format - By [Jannchie](mailto:jannchie@gmail.com) in [846ee05](https://github.com/Jannchie/active-time/commit/846ee05)
+
+## v0.2.1
+
+[v0.2.0...v0.2.1](https://github.com/Jannchie/active-time/compare/v0.2.0...v0.2.1)
+
+### :adhesive_bandage: Fixes
+
+- db - By [Jannchie](mailto:jannchie@gmail.com) in [063267f](https://github.com/Jannchie/active-time/commit/063267f)
+
+## v0.2.0
+
+[v0.1.5...v0.2.0](https://github.com/Jannchie/active-time/compare/v0.1.5...v0.2.0)
+
+### :sparkles: Features
+
+- support daily & hourly data - By [Jannchie](mailto:jannchie@gmail.com) in [819e93b](https://github.com/Jannchie/active-time/commit/819e93b)
+
+### :memo: Documentation
+
+- update changelog & version - By [Jannchie](mailto:jannchie@gmail.com) in [f6d302b](https://github.com/Jannchie/active-time/commit/f6d302b)
+
+## v0.1.5
+
+[v0.1.4...v0.1.5](https://github.com/Jannchie/active-time/compare/v0.1.4...v0.1.5)
+
+### :adhesive_bandage: Fixes
+
+- windows tray - By [Jannchie](mailto:jannchie@gmail.com) in [813fda8](https://github.com/Jannchie/active-time/commit/813fda8)
+
+## v0.1.4
+
+[v0.1.3...v0.1.4](https://github.com/Jannchie/active-time/compare/v0.1.3...v0.1.4)
+
+### :adhesive_bandage: Fixes
+
+- icons - By [Jannchie](mailto:jannchie@gmail.com) in [3488354](https://github.com/Jannchie/active-time/commit/3488354)
+- icon - By [Jannchie](mailto:jannchie@gmail.com) in [927e0ae](https://github.com/Jannchie/active-time/commit/927e0ae)
+- icons - By [Jannchie](mailto:jannchie@gmail.com) in [4b3b1e7](https://github.com/Jannchie/active-time/commit/4b3b1e7)
+
+## v0.1.3
+
+[v0.1.2...v0.1.3](https://github.com/Jannchie/active-time/compare/v0.1.2...v0.1.3)
+
+### :adhesive_bandage: Fixes
+
+- icon - By [Jannchie](mailto:jannchie@gmail.com) in [afd1a86](https://github.com/Jannchie/active-time/commit/afd1a86)
+- mac exit - By [Jannchie](mailto:jannchie@gmail.com) in [3b9efb6](https://github.com/Jannchie/active-time/commit/3b9efb6)
+
+## v0.1.2
+
+[v0.1.1...v0.1.2](https://github.com/Jannchie/active-time/compare/v0.1.1...v0.1.2)
+
+### :sparkles: Features
+
+- add index - By [Jannchie](mailto:jannchie@gmail.com) in [8ee7725](https://github.com/Jannchie/active-time/commit/8ee7725)
+- about - By [Jannchie](mailto:jannchie@gmail.com) in [453cbbc](https://github.com/Jannchie/active-time/commit/453cbbc)
+
+### :adhesive_bandage: Fixes
+
+- bug & update: change log - By [Jannchie](mailto:jannchie@gmail.com) in [aea2634](https://github.com/Jannchie/active-time/commit/aea2634)
+- theme - By [Jannchie](mailto:jannchie@gmail.com) in [48b052f](https://github.com/Jannchie/active-time/commit/48b052f)
+
+## v0.1.1
+
+[v0.1.0...v0.1.1](https://github.com/Jannchie/active-time/compare/v0.1.0...v0.1.1)
+
+### :adhesive_bandage: Fixes
+
+- mac adaptation - By [Jannchie](mailto:jannchie@gmail.com) in [56e47e1](https://github.com/Jannchie/active-time/commit/56e47e1)
+
+## v0.1.0
+
+[ac100e6c166eda104adfd242cc9a9b3a6e46601a...v0.1.0](https://github.com/Jannchie/active-time/compare/ac100e6c166eda104adfd242cc9a9b3a6e46601a...v0.1.0)
+
+### :sparkles: Features
+
+- use new boilerplate - By [Jannchie](mailto:jannchie@gmail.com) in [46e4cf6](https://github.com/Jannchie/active-time/commit/46e4cf6)
+
+### :adhesive_bandage: Fixes
+
+- mac adaptation - By [Jannchie](mailto:jannchie@gmail.com) in [e2d9589](https://github.com/Jannchie/active-time/commit/e2d9589)
+
 # Change log
 
 ## [0.2.3 - Bug Fix](https://github.com/Jannchie/active-time/releases/tag/v0.2.3)
