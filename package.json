@@ -22,7 +22,7 @@
     "build": "concurrently \"pnpm run build:main\" \"pnpm run build:renderer\"",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
     "build:renderer": "pnpm exec vite build",
-    "postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps",
+    "postinstall": "ts-node .erb/scripts/check-native-dep.js && node .erb/scripts/install-app-deps.js",
     "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
     "package": "ts-node ./.erb/scripts/clean.js dist && pnpm run build && electron-builder build --publish never",
     "prepare": "husky install",
