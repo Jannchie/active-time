@@ -1,3 +1,11 @@
+## v0.6.1
+
+[v0.6.0...v0.6.1](https://github.com/Jannchie/active-time/compare/v0.6.0...v0.6.1)
+
+### :adhesive_bandage: Fixes
+
+- **build**: correct asarUnpack glob && update files for packaging - By [Jianqi Pan](mailto:jannchie@gmail.com) in [4ced903](https://github.com/Jannchie/active-time/commit/4ced903)
+
 ## v0.6.0
 
 [v0.5.0...v0.6.0](https://github.com/Jannchie/active-time/compare/v0.5.0...v0.6.0)
