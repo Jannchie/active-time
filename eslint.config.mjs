@@ -5,6 +5,7 @@ export default jannchie(
     react: false,
     typescript: {
       tsconfigPath: 'tsconfig.eslint.json',
+      ignoresTypeAware: ['**/__tests__/**'],
     },
     ignores: [
       'logs',
