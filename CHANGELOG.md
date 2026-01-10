@@ -1,3 +1,14 @@
+## v0.6.0
+
+[v0.5.0...v0.6.0](https://github.com/Jannchie/active-time/compare/v0.5.0...v0.6.0)
+
+### :wrench: Chores
+
+- **build**: adjust scripts and eslint config && comment mac publish step - By [Jianqi Pan](mailto:jannchie@gmail.com) in [9c03acd](https://github.com/Jannchie/active-time/commit/9c03acd)
+- **ci**: trigger publish on tag push - By [Jianqi Pan](mailto:jannchie@gmail.com) in [b6e01be](https://github.com/Jannchie/active-time/commit/b6e01be)
+- **ci**: enable workflow dispatch and set write permissions - By [Jianqi Pan](mailto:jannchie@gmail.com) in [797553c](https://github.com/Jannchie/active-time/commit/797553c)
+- **testing**: remove sample test and update ignore configs - By [Jianqi Pan](mailto:jannchie@gmail.com) in [b1122db](https://github.com/Jannchie/active-time/commit/b1122db)
+
 ## v0.5.0
 
 [v0.4.0...v0.5.0](https://github.com/Jannchie/active-time/compare/v0.4.0...v0.5.0)

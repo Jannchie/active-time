@@ -1,7 +1,7 @@
 {
   "name": "active-time",
   "productName": "Active Time",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A desktop application that tracks active time.",
   "license": "MIT",
   "author": {
