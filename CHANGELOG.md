@@ -1,3 +1,11 @@
+## v0.6.2
+
+[v0.6.1...v0.6.2](https://github.com/Jannchie/active-time/compare/v0.6.1...v0.6.2)
+
+### :wrench: Chores
+
+- **npmrc**: add node-linker hoisted config - By [Jianqi Pan](mailto:jannchie@gmail.com) in [329f2dc](https://github.com/Jannchie/active-time/commit/329f2dc)
+
 ## v0.6.1
 
 [v0.6.0...v0.6.1](https://github.com/Jannchie/active-time/compare/v0.6.0...v0.6.1)
