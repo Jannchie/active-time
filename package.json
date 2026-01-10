@@ -88,6 +88,9 @@
     "testPathIgnorePatterns": [
       "release/app/dist"
     ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/release/"
+    ],
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"
     }

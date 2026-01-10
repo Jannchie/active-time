@@ -4,7 +4,7 @@ export default jannchie(
   {
     react: false,
     typescript: {
-      tsconfigPath: 'tsconfig.json',
+      tsconfigPath: 'tsconfig.eslint.json',
     },
     ignores: [
       'logs',
