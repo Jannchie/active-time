@@ -1,3 +1,24 @@
+## v0.5.0
+
+[v0.4.0...v0.5.0](https://github.com/Jannchie/active-time/compare/v0.4.0...v0.5.0)
+
+### :sparkles: Features
+
+- **scripts**: add install-app-deps script with ci skip logic - By [Jianqi Pan](mailto:jannchie@gmail.com) in [9c0a061](https://github.com/Jannchie/active-time/commit/9c0a061)
+
+### :adhesive_bandage: Fixes
+
+- **build**: improve electron version handling && add install fallback in ci - By [Jianqi Pan](mailto:jannchie@gmail.com) in [8da2b49](https://github.com/Jannchie/active-time/commit/8da2b49)
+- **build**: enable glob for source map deletion - By [Jianqi Pan](mailto:jannchie@gmail.com) in [4e77e14](https://github.com/Jannchie/active-time/commit/4e77e14)
+
+### :art: Refactors
+
+- **scripts**: replace rimraf with rimrafSync - By [Jianqi Pan](mailto:jannchie@gmail.com) in [85cc5c7](https://github.com/Jannchie/active-time/commit/85cc5c7)
+
+### :wrench: Chores
+
+- **ci**: remove explicit pnpm version from workflows - By [Jianqi Pan](mailto:jannchie@gmail.com) in [29adb0a](https://github.com/Jannchie/active-time/commit/29adb0a)
+
 ## v0.4.0
 
 [v0.3.0...v0.4.0](https://github.com/Jannchie/active-time/compare/v0.3.0...v0.4.0)
