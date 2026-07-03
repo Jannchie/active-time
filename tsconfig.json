@@ -14,10 +14,9 @@
     "strict": true,
     "pretty": true,
     "sourceMap": true,
-    "baseUrl": "./src",
     "paths": {
       "@/*": [
-        "renderer/*"
+        "./src/renderer/*"
       ]
     },
     "noUnusedLocals": true,
