@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <UDashboardGroup unit="rem" storage="local" storage-key="dashboard" :persistent="true">
+    <UDashboardGroup unit="rem" storage="local" storage-key="dashboard-v2" :persistent="true">
       <UDashboardSidebar
         id="sidebar"
         class="app-sidebar"
@@ -11,16 +11,14 @@
         :max-size="20"
         :default-size="16"
         :collapsed-size="5"
+        :ui="{ header: 'px-3', body: 'px-3 py-2 gap-3', footer: 'px-3 py-2' }"
       >
         <template #header="{ collapsed }">
-          <div class="flex w-full items-center gap-2 py-2">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center text-emerald-500">
-              <UIcon name="i-lucide-timer" class="h-5 w-5" />
+          <div class="flex w-full items-center gap-2 py-1.5">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center text-emerald-500">
+              <UIcon name="i-lucide-timer" class="h-4 w-4" />
             </div>
-            <div
-              v-if="!collapsed"
-              class="text-[10px] font-bold uppercase tracking-[0.3em] text-muted"
-            >
+            <div v-if="!collapsed" class="micro-label tracking-[0.3em]">
               {{ t('app.name') }}
             </div>
           </div>
@@ -33,12 +31,18 @@
         </template>
       </UDashboardSidebar>
 
-      <UDashboardPanel id="main" :min-size="50" :max-size="100" :default-size="84" :resizable="false">
+      <UDashboardPanel
+        id="main"
+        :resizable="false"
+        :ui="{ body: 'gap-0 sm:gap-0 p-3 sm:p-4' }"
+      >
         <template #header>
           <TitleBar />
         </template>
         <template #body>
-          <component :is="currentView" v-bind="viewProps" />
+          <Transition name="view" mode="out-in">
+            <component :is="currentView" v-bind="viewProps" />
+          </Transition>
         </template>
         <template #footer>
           <StatusBar />

@@ -50,25 +50,51 @@
   --font-title: var(--font-title-ja);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/* Desktop density: everything rem-based scales down with the root size. */
+html {
+  font-size: 14px;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
   font-family: var(--font-display);
   color: var(--ui-text);
   background-color: var(--ui-bg);
-  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
 }
 
-.app-sidebar {
-  min-width: 220px;
+/* Native apps use the arrow cursor on controls, not the hand. */
+button,
+[role='button'],
+label,
+summary {
+  cursor: default !important;
 }
 
-.app-sidebar[data-collapsed='true'] {
-  min-width: 64px;
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  user-select: text;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+/* Opt-in text selection for data values (program names, etc.). */
+.selectable,
+.selectable * {
+  user-select: text;
+  cursor: text;
 }
 
 .drag-region {
@@ -79,15 +105,161 @@ body {
   -webkit-app-region: no-drag;
 }
 
-.status-bar {
-  border-top: 1px solid var(--ui-border);
-  background: var(--ui-bg);
+/* ---- App chrome -------------------------------------------------------- */
+
+.app-sidebar {
+  min-width: 220px;
+  background-color: var(--ui-bg-muted);
 }
 
+.app-sidebar[data-collapsed='true'] {
+  min-width: 64px;
+}
+
+.status-bar {
+  border-top: 1px solid var(--ui-border);
+  background-color: var(--ui-bg-muted);
+  color: var(--ui-text-muted);
+}
+
+.status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: stretch;
+  padding: 0 8px;
+  transition:
+    background-color 80ms ease,
+    color 80ms ease;
+}
+
+button.status-item:hover {
+  background-color: var(--ui-bg-elevated);
+  color: var(--ui-text);
+}
+
+.status-sep {
+  flex-shrink: 0;
+  width: 1px;
+  height: 12px;
+  background-color: var(--ui-border);
+}
+
+.status-dot-live {
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---- Panels ------------------------------------------------------------ */
+
+.panel {
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background-color: var(--ui-bg);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 30px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--ui-border);
+  background-color: var(--ui-bg-muted);
+}
+
+.micro-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
+/* ---- Segmented control ------------------------------------------------- */
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
+  background-color: var(--ui-bg-elevated);
+}
+
+.segmented-item {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--ui-text-muted);
+  transition:
+    color 80ms ease,
+    background-color 80ms ease;
+}
+
+.segmented-item:hover {
+  color: var(--ui-text);
+}
+
+.segmented-item[data-active='true'] {
+  background-color: var(--ui-bg);
+  color: var(--ui-text-highlighted);
+  box-shadow:
+    0 0 0 1px var(--ui-border),
+    0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+/* ---- View transition --------------------------------------------------- */
+
+.view-enter-active,
+.view-leave-active {
+  transition:
+    opacity 90ms ease,
+    transform 90ms ease;
+}
+
+.view-enter-from {
+  opacity: 0;
+  transform: translateY(3px);
+}
+
+.view-leave-to {
+  opacity: 0;
+}
+
+/* ---- Scrollbars -------------------------------------------------------- */
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--ui-border);
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--ui-text-muted) 30%, transparent);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--ui-text-muted) 50%, transparent);
 }

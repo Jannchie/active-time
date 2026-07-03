@@ -1,53 +1,52 @@
 <template>
-  <div class="space-y-6 py-5">
-    <!-- Header -->
-    <section>
-      <h1 class="text-lg font-semibold">{{ t('settings.title') }}</h1>
-      <p class="mt-0.5 text-sm text-muted">{{ t('settings.description') }}</p>
+  <div class="flex flex-col gap-3">
+    <!-- Toolbar -->
+    <section class="flex items-center justify-between gap-2">
+      <h1 class="text-[13px] font-bold tracking-wide">{{ t('settings.title') }}</h1>
     </section>
 
     <!-- Settings sections -->
-    <div class="divide-y divide-(--ui-border) rounded-xl border border-(--ui-border)">
+    <div class="panel divide-y divide-(--ui-border)">
       <!-- Theme -->
-      <section class="flex flex-wrap items-center justify-between gap-3 p-4">
+      <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
-          <h2 class="text-sm font-semibold">{{ t('settings.theme.title') }}</h2>
-          <p class="mt-0.5 text-xs text-muted">{{ t('settings.theme.description') }}</p>
+          <h2 class="text-xs font-semibold">{{ t('settings.theme.title') }}</h2>
+          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.theme.description') }}</p>
         </div>
-        <div class="flex gap-1">
-          <UButton
-            size="xs"
-            :variant="theme === 'dark' ? 'solid' : 'ghost'"
-            color="neutral"
+        <div class="segmented">
+          <button
+            type="button"
+            class="segmented-item"
+            :data-active="theme === 'dark'"
             @click="emit('update:theme', 'dark')"
           >
             {{ t('common.dark') }}
-          </UButton>
-          <UButton
-            size="xs"
-            :variant="theme === 'light' ? 'solid' : 'ghost'"
-            color="neutral"
+          </button>
+          <button
+            type="button"
+            class="segmented-item"
+            :data-active="theme === 'light'"
             @click="emit('update:theme', 'light')"
           >
             {{ t('common.light') }}
-          </UButton>
-          <UButton
-            size="xs"
-            :variant="theme === 'system' ? 'solid' : 'ghost'"
-            color="neutral"
+          </button>
+          <button
+            type="button"
+            class="segmented-item"
+            :data-active="theme === 'system'"
             @click="emit('update:theme', 'system')"
           >
             {{ t('common.system') }}
-          </UButton>
+          </button>
         </div>
       </section>
 
       <!-- Interval -->
-      <section class="p-4">
+      <section class="px-3 py-2.5">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 class="text-sm font-semibold">{{ t('settings.interval.title') }}</h2>
-            <p class="mt-0.5 text-xs text-muted">{{ t('settings.interval.description') }}</p>
+            <h2 class="text-xs font-semibold">{{ t('settings.interval.title') }}</h2>
+            <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.interval.description') }}</p>
           </div>
           <div class="flex items-center gap-2">
             <input
@@ -56,82 +55,84 @@
               :min="MIN_CHECK_INTERVAL"
               :max="MAX_CHECK_INTERVAL"
               step="1"
-              class="h-8 w-20 rounded-lg border border-(--ui-border) bg-transparent px-2 text-xs tabular-nums text-right focus:border-(--ui-border-active) focus:outline-none"
+              class="h-6 w-16 rounded-md border border-(--ui-border) bg-(--ui-bg-muted) px-2 text-right text-[11px] tabular-nums focus:border-(--ui-border-accented) focus:outline-none"
             >
-            <span class="text-xs text-muted">{{ t('common.secondsShort') }}</span>
+            <span class="text-[11px] text-muted">{{ t('common.secondsShort') }}</span>
             <UButton size="xs" color="neutral" variant="solid" @click="applyInterval">
               {{ t('common.apply') }}
             </UButton>
           </div>
         </div>
-        <div class="mt-3 flex flex-wrap items-center gap-1">
-          <UButton
-            v-for="preset in intervalPresets"
-            :key="preset"
-            size="xs"
-            color="neutral"
-            :variant="intervalInput === preset ? 'solid' : 'ghost'"
-            @click="applyPreset(preset)"
-          >
-            {{ preset }}{{ t('common.secondsShort') }}
-          </UButton>
-          <span class="ml-2 text-[11px] text-muted">
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <div class="segmented">
+            <button
+              v-for="preset in intervalPresets"
+              :key="preset"
+              type="button"
+              class="segmented-item"
+              :data-active="intervalInput === preset"
+              @click="applyPreset(preset)"
+            >
+              {{ preset }}{{ t('common.secondsShort') }}
+            </button>
+          </div>
+          <span class="text-[10px] text-muted">
             {{ t('common.range', { min: MIN_CHECK_INTERVAL, max: MAX_CHECK_INTERVAL, unit: t('common.secondsShort') }) }}
           </span>
         </div>
       </section>
 
       <!-- Language -->
-      <section class="flex flex-wrap items-center justify-between gap-3 p-4">
+      <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
-          <h2 class="text-sm font-semibold">{{ t('settings.language.title') }}</h2>
-          <p class="mt-0.5 text-xs text-muted">{{ t('settings.language.description') }}</p>
+          <h2 class="text-xs font-semibold">{{ t('settings.language.title') }}</h2>
+          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.language.description') }}</p>
         </div>
-        <div class="flex gap-1">
-          <UButton
+        <div class="segmented">
+          <button
             v-for="option in localeOptions"
             :key="option.value"
-            size="xs"
-            :variant="locale === option.value ? 'solid' : 'ghost'"
-            color="neutral"
+            type="button"
+            class="segmented-item"
+            :data-active="locale === option.value"
             @click="setAppLocale(option.value)"
           >
             {{ option.label }}
-          </UButton>
+          </button>
         </div>
       </section>
 
       <!-- Auto Start -->
-      <section class="flex flex-wrap items-center justify-between gap-3 p-4">
+      <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
-          <h2 class="text-sm font-semibold">{{ t('settings.autoStart.title') }}</h2>
-          <p class="mt-0.5 text-xs text-muted">{{ t('settings.autoStart.description') }}</p>
+          <h2 class="text-xs font-semibold">{{ t('settings.autoStart.title') }}</h2>
+          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.autoStart.description') }}</p>
         </div>
-        <div class="flex gap-1">
-          <UButton
-            size="xs"
-            :variant="loginSettings?.openAtLogin ? 'solid' : 'ghost'"
-            color="neutral"
+        <div class="segmented">
+          <button
+            type="button"
+            class="segmented-item"
+            :data-active="loginSettings?.openAtLogin === true"
             @click="setAutoStart(true)"
           >
             {{ t('common.enabled') }}
-          </UButton>
-          <UButton
-            size="xs"
-            :variant="loginSettings?.openAtLogin === false ? 'solid' : 'ghost'"
-            color="neutral"
+          </button>
+          <button
+            type="button"
+            class="segmented-item"
+            :data-active="loginSettings?.openAtLogin === false"
             @click="setAutoStart(false)"
           >
             {{ t('common.disabled') }}
-          </UButton>
+          </button>
         </div>
       </section>
 
       <!-- Danger zone -->
-      <section class="flex flex-wrap items-center justify-between gap-3 p-4">
+      <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
-          <h2 class="text-sm font-semibold text-red-500">{{ t('settings.danger.title') }}</h2>
-          <p class="mt-0.5 text-xs text-muted">{{ t('settings.danger.description') }}</p>
+          <h2 class="text-xs font-semibold text-red-500">{{ t('settings.danger.title') }}</h2>
+          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.danger.description') }}</p>
         </div>
         <UButton color="error" variant="outline" size="xs" @click="showModal = true">
           {{ t('settings.danger.action') }}
@@ -140,22 +141,24 @@
     </div>
 
     <!-- Modal -->
-    <UModal v-model="showModal">
-      <div class="space-y-4 p-5">
-        <div class="flex items-center gap-2">
-          <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-500" />
-          <h3 class="text-sm font-semibold">{{ t('settings.danger.modalTitle') }}</h3>
+    <UModal v-model:open="showModal">
+      <template #content>
+        <div class="space-y-3 p-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 text-red-500" />
+            <h3 class="text-xs font-semibold">{{ t('settings.danger.modalTitle') }}</h3>
+          </div>
+          <p class="text-xs text-muted">{{ t('settings.danger.modalDescription') }}</p>
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton variant="ghost" color="neutral" size="xs" @click="showModal = false">
+              {{ t('common.cancel') }}
+            </UButton>
+            <UButton color="error" variant="solid" size="xs" @click="confirmWipe">
+              {{ t('common.delete') }}
+            </UButton>
+          </div>
         </div>
-        <p class="text-sm text-muted">{{ t('settings.danger.modalDescription') }}</p>
-        <div class="flex justify-end gap-2 pt-1">
-          <UButton variant="ghost" color="neutral" size="sm" @click="showModal = false">
-            {{ t('common.cancel') }}
-          </UButton>
-          <UButton color="error" variant="solid" size="sm" @click="confirmWipe">
-            {{ t('common.delete') }}
-          </UButton>
-        </div>
-      </div>
+      </template>
     </UModal>
   </div>
 </template>

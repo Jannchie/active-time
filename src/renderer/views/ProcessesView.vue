@@ -1,59 +1,60 @@
 <template>
-  <div class="space-y-6 py-5">
-    <!-- Header -->
-    <section class="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 class="text-lg font-semibold">{{ t('processes.title') }}</h1>
-        <p class="mt-0.5 text-sm text-muted">{{ t('processes.description') }}</p>
-      </div>
-      <div class="flex gap-1">
-        <UButton
-          v-for="range in ranges"
-          :key="range.key"
-          size="xs"
-          :variant="activeRange.key === range.key ? 'solid' : 'ghost'"
-          color="neutral"
-          @click="setRange(range)"
-        >
-          {{ range.label }}
-        </UButton>
+  <div class="flex flex-col gap-3">
+    <!-- Toolbar -->
+    <section class="flex flex-wrap items-center justify-between gap-2">
+      <h1 class="text-[13px] font-bold tracking-wide">{{ t('processes.title') }}</h1>
+      <div class="flex items-center gap-2">
+        <UIcon
+          v-if="loading"
+          name="i-lucide-loader"
+          class="h-3 w-3 animate-spin text-muted"
+        />
+        <div class="segmented">
+          <button
+            v-for="range in ranges"
+            :key="range.key"
+            type="button"
+            class="segmented-item"
+            :data-active="activeRange.key === range.key"
+            @click="setRange(range)"
+          >
+            {{ range.label }}
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- Metric cards -->
-    <section class="grid gap-4 md:grid-cols-2">
-      <div class="rounded-xl border border-(--ui-border) p-4">
-        <div class="text-xs text-muted">{{ t('processes.metrics.foregroundTime') }}</div>
-        <div class="mt-1.5 text-2xl font-semibold tabular-nums text-emerald-500">
+    <!-- Metrics -->
+    <section class="grid gap-2 md:grid-cols-2">
+      <div class="panel p-3">
+        <div class="micro-label">{{ t('processes.metrics.foregroundTime') }}</div>
+        <div class="mt-2 text-2xl font-bold leading-none tabular-nums text-emerald-500">
           {{ formatDuration(totalForegroundSeconds) }}
         </div>
-        <div class="mt-1.5 text-xs text-muted">{{ t('processes.metrics.foregroundHint') }}</div>
+        <div class="mt-2 text-[11px] text-muted">{{ t('processes.metrics.foregroundHint') }}</div>
       </div>
-      <div class="rounded-xl border border-(--ui-border) p-4">
-        <div class="text-xs text-muted">{{ t('processes.metrics.trackedApps') }}</div>
-        <div class="mt-1.5 text-2xl font-semibold tabular-nums">
+      <div class="panel p-3">
+        <div class="micro-label">{{ t('processes.metrics.trackedApps') }}</div>
+        <div class="mt-2 text-2xl font-bold leading-none tabular-nums">
           {{ uniquePrograms }}
         </div>
-        <div class="mt-1.5 text-xs text-muted">{{ t('processes.metrics.trackedAppsHint') }}</div>
+        <div class="mt-2 text-[11px] text-muted">{{ t('processes.metrics.trackedAppsHint') }}</div>
       </div>
     </section>
 
     <!-- Process table -->
-    <section class="rounded-xl border border-(--ui-border)">
-      <div class="flex flex-wrap items-center justify-between gap-3 p-4 pb-0">
-        <div>
-          <h2 class="text-sm font-semibold">{{ t('processes.detail.title') }}</h2>
-          <p class="mt-0.5 text-xs text-muted">{{ t('processes.detail.description') }}</p>
+    <section class="panel">
+      <header class="panel-header">
+        <span class="micro-label">{{ t('processes.detail.title') }}</span>
+        <div class="flex items-center gap-2 text-[11px] text-muted">
+          <span>{{ t('processes.sortedBy', { sort: sortLabel }) }}</span>
+          <span class="tabular-nums">{{ processRows.length }}</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-muted">{{ t('processes.sortedBy', { sort: sortLabel }) }}</span>
-          <UBadge color="neutral" variant="subtle" size="xs">{{ processRows.length }}</UBadge>
-        </div>
-      </div>
+      </header>
 
-      <div v-if="processRows.length" class="mt-3">
+      <div v-if="processRows.length">
         <!-- Table header -->
-        <div class="grid grid-cols-[minmax(0,1fr)_90px_130px] items-center gap-4 border-b border-(--ui-border) px-4 py-2 text-[11px] uppercase tracking-wider text-muted">
+        <div class="grid grid-cols-[minmax(0,1fr)_100px_130px] items-center gap-3 border-b border-(--ui-border) px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted">
           <span>{{ t('processes.table.process') }}</span>
           <span class="text-right">{{ t('processes.table.foreground') }}</span>
           <span class="text-right">{{ t('processes.table.lastSeen') }}</span>
@@ -64,64 +65,55 @@
           <div
             v-for="row in processRows"
             :key="row.name"
-            class="space-y-2 px-4 py-2.5 transition-colors hover:bg-(--ui-bg-elevated)"
+            class="relative transition-colors hover:bg-(--ui-bg-elevated)/60"
           >
-            <div class="grid grid-cols-[minmax(0,1fr)_90px_130px] items-center gap-4">
-              <div class="flex min-w-0 items-center gap-2">
+            <div
+              class="absolute inset-y-0 left-0 bg-emerald-500/10"
+              :style="{ width: `${row.progressValue}%` }"
+            />
+            <div class="relative grid grid-cols-[minmax(0,1fr)_100px_130px] items-center gap-3 px-3 py-1">
+              <div class="flex min-w-0 items-center gap-1.5">
                 <button
                   type="button"
-                  class="flex h-6 w-6 shrink-0 items-center justify-center transition-colors"
+                  class="flex h-5 w-5 shrink-0 items-center justify-center transition-colors"
                   :class="isMarked(row.name) ? 'text-emerald-500' : 'text-muted opacity-30 hover:opacity-70'"
                   :title="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
                   :aria-label="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
                   :aria-pressed="isMarked(row.name)"
                   @click="toggleMarked(row.name)"
                 >
-                  <UIcon name="i-lucide-star" class="h-3.5 w-3.5" />
+                  <UIcon name="i-lucide-star" class="h-3 w-3" />
                 </button>
-                <div class="flex h-6 w-6 shrink-0 items-center justify-center">
+                <div class="flex h-5 w-5 shrink-0 items-center justify-center">
                   <img
                     v-if="iconMap[row.name]"
                     :src="iconMap[row.name]"
                     alt=""
-                    class="h-4 w-4"
+                    class="h-3.5 w-3.5"
                   >
                   <div
                     v-else
-                    class="h-4 w-4 rounded bg-muted-foreground/20"
+                    class="h-3.5 w-3.5 rounded-sm bg-(--ui-border-accented)/40"
                   />
                 </div>
-                <div class="truncate text-xs font-medium">{{ row.name }}</div>
+                <div class="selectable truncate text-xs font-medium">{{ row.name }}</div>
               </div>
-              <div class="text-right text-xs text-muted tabular-nums">
+              <div class="text-right text-[11px] tabular-nums">
                 {{ formatDuration(row.foreground) }}
               </div>
-              <div class="text-right text-xs text-muted tabular-nums opacity-60">
+              <div class="text-right text-[11px] tabular-nums text-muted">
                 {{ row.lastSeen ? formatTimestamp(row.lastSeen) : '--' }}
               </div>
             </div>
-            <UProgress
-              class="w-full"
-              :model-value="row.progressValue"
-              :max="100"
-              color="neutral"
-              size="xs"
-            />
           </div>
         </div>
       </div>
 
-      <div v-else class="flex flex-col items-center gap-2 px-4 py-8 text-sm text-muted">
-        <UIcon v-if="loading" name="i-lucide-loader" class="h-5 w-5 animate-spin opacity-40" />
+      <div v-else class="flex flex-col items-center gap-2 px-3 py-6 text-xs text-muted">
+        <UIcon v-if="loading" name="i-lucide-loader" class="h-4 w-4 animate-spin opacity-40" />
         {{ loading ? t('processes.loading') : t('processes.empty') }}
       </div>
     </section>
-
-    <!-- Syncing -->
-    <div v-if="loading" class="flex items-center gap-2 text-xs text-muted">
-      <UIcon name="i-lucide-loader" class="h-3.5 w-3.5 animate-spin" />
-      {{ t('processes.syncing') }}
-    </div>
   </div>
 </template>
 

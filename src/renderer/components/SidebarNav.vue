@@ -4,8 +4,8 @@
       v-for="item in items"
       :key="item.key"
       class="no-drag gap-2"
-      :class="collapsed ? 'h-9 w-9 justify-center' : 'h-9 w-full justify-start'"
-      size="sm"
+      :class="collapsed ? 'h-7 w-7 justify-center' : 'h-7 w-full justify-start px-2'"
+      size="xs"
       :variant="modelValue === item.key ? 'soft' : 'ghost'"
       color="neutral"
       :square="collapsed"
@@ -13,10 +13,10 @@
     >
       <UIcon
         :name="item.icon"
-        class="h-4 w-4"
+        class="h-3.5 w-3.5"
         :class="modelValue === item.key ? 'text-emerald-500' : 'text-muted'"
       />
-      <span v-if="!collapsed" class="text-sm">{{ item.label }}</span>
+      <span v-if="!collapsed" class="text-xs">{{ item.label }}</span>
     </UButton>
   </nav>
 </template>

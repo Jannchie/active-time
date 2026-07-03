@@ -13,7 +13,7 @@
       />
     </template>
     <template #title>
-      <span class="text-sm font-semibold">
+      <span class="text-xs font-medium tracking-wide text-muted">
         {{ t('app.name') }}
       </span>
     </template>

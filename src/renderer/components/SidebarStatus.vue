@@ -1,33 +1,30 @@
 <template>
   <div class="flex flex-col gap-2">
-    <div
-      v-if="!collapsed"
-      class="text-[10px] uppercase tracking-[0.3em] text-muted"
-    >
+    <div v-if="!collapsed" class="micro-label">
       {{ t('sidebar.activeApp') }}
     </div>
     <div v-if="collapsed" class="flex items-center justify-center">
-      <UIcon name="i-lucide-activity" class="h-4 w-4 text-muted" />
+      <UIcon name="i-lucide-activity" class="h-3.5 w-3.5 text-muted" />
     </div>
-    <div v-else class="space-y-2 text-xs">
-      <div v-if="!status.available" class="text-muted">
+    <div v-else class="space-y-1.5 text-xs">
+      <div v-if="!status.available" class="text-[11px] text-muted">
         {{ t('status.activityUnavailable') }}
       </div>
-      <div v-else-if="!items.length" class="text-muted">
+      <div v-else-if="!items.length" class="text-[11px] text-muted">
         {{ emptyMessage }}
       </div>
-      <div v-else class="space-y-2.5">
+      <div v-else class="space-y-2">
         <div
           v-for="item in items"
           :key="item.program"
           class="flex items-center gap-2"
         >
-          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+          <span class="status-dot-live h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
           <div class="min-w-0 flex-1">
-            <div class="truncate font-medium">
+            <div class="selectable truncate text-xs font-medium">
               {{ item.program }}
             </div>
-            <div class="truncate text-[11px] text-muted tabular-nums">
+            <div class="truncate text-[10px] text-muted tabular-nums">
               {{ timeLabel(item.seconds) }}
             </div>
           </div>

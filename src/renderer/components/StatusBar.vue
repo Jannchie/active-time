@@ -1,23 +1,24 @@
 <template>
-  <footer class="status-bar flex items-center gap-3 px-3 py-1.5">
-    <UBadge
-      :color="recording ? 'success' : 'neutral'"
-      :variant="recording ? 'subtle' : 'soft'"
-      size="xs"
-      class="cursor-pointer select-none"
-      @click="toggleRecording"
-    >
-      {{ recording ? t('status.recording') : t('status.paused') }}
-    </UBadge>
-    <span class="text-xs text-muted tabular-nums">
+  <footer class="status-bar flex h-[26px] items-center px-1 text-[11px]">
+    <button type="button" class="status-item" @click="toggleRecording">
+      <span
+        class="h-1.5 w-1.5 shrink-0 rounded-full"
+        :class="recording ? 'status-dot-live bg-emerald-500' : 'bg-(--ui-border-accented)'"
+      />
+      <span>{{ recording ? t('status.recording') : t('status.paused') }}</span>
+    </button>
+    <span class="status-sep" />
+    <span class="status-item tabular-nums">
       {{ t('status.storage', { size: formatBytes(storageSize) }) }}
     </span>
-    <div class="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted">
-      <UIcon name="i-lucide-activity" class="h-3.5 w-3.5 shrink-0" />
+    <span class="status-sep" />
+    <div class="status-item min-w-0 flex-1">
+      <UIcon name="i-lucide-activity" class="h-3 w-3 shrink-0" />
       <span class="truncate">{{ t('status.active', { label: activeLabel }) }}</span>
       <span class="shrink-0 tabular-nums opacity-60">{{ activeTimeLabel }}</span>
     </div>
-    <span class="shrink-0 text-xs tabular-nums text-muted">
+    <span class="status-sep" />
+    <span class="status-item shrink-0 tabular-nums">
       {{ t('status.sample', { seconds: checkInterval, unit: t('common.secondsShort') }) }}
     </span>
   </footer>
