@@ -240,6 +240,11 @@
     "node": ">=18.18",
     "pnpm": ">=10.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "node-gyp": "^13.0.1"
+    }
+  },
   "electronmon": {
     "patterns": [
       "!**/**",

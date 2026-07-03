@@ -1,4 +1,7 @@
 shellEmulator: true
 trustPolicy: no-downgrade
+# Only enforce trust checks for recently published packages; older ones
+# (e.g. semver@6.3.1 from 2023) predate provenance and false-positive.
+trustPolicyIgnoreExpired: 10080
 onlyBuiltDependencies:
   - better-sqlite3
