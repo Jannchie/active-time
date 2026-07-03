@@ -232,7 +232,8 @@
     "publish": {
       "provider": "github",
       "owner": "jannchie",
-      "repo": "active-time"
+      "repo": "active-time",
+      "releaseType": "release"
     }
   },
   "engines": {

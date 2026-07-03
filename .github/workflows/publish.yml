@@ -11,65 +11,53 @@ permissions:
 
 jobs:
   publish:
-    # To enable auto publishing to github, update your electron publisher
-    # config in package.json > "build" and remove the conditional below
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-        # os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: windows-latest
 
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install libx11-dev on ubuntu-latest
-        if: matrix.os == 'ubuntu-latest'
+      - name: Verify tag matches package versions
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
         run: |
-          sudo apt-get install -y libx11-dev
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          APP_VERSION=$(node -p "require('./release/app/package.json').version")
+          ROOT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$APP_VERSION" ]; then
+            echo "Tag v$TAG_VERSION does not match release/app/package.json version $APP_VERSION" >&2
+            exit 1
+          fi
+          if [ "$TAG_VERSION" != "$ROOT_VERSION" ]; then
+            echo "Tag v$TAG_VERSION does not match package.json version $ROOT_VERSION" >&2
+            exit 1
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: |
             pnpm-lock.yaml
             release/app/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: |
-          pnpm install
+        run: pnpm install
 
       - name: Build releases
         run: |
           pnpm run postinstall
           pnpm run build
-      - name: Publish to GitHub for Windows
-        if: matrix.os == 'windows-latest'
+
+      - name: Publish to GitHub
         env:
-          # These values are used for auto updates signing
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
+          # These values are used for code signing (skipped when unset)
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           # This is used for uploading release assets to github
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pnpm exec electron-builder -- --publish always --win
-      # - name: Publish to GitHub for Mac
-      #   if: matrix.os == 'macos-latest'
-      #   env:
-      #     # These values are used for auto updates signing
-      #     APPLE_ID: ${{ secrets.APPLE_ID }}
-      #     APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
-      #     CSC_LINK: ${{ secrets.CSC_LINK }}
-      #     CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      #     # This is used for uploading release assets to github
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     pnpm exec electron-builder -- --publish always --mac
+        run: pnpm exec electron-builder --publish always --win
