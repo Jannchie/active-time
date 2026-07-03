@@ -1,20 +1,18 @@
 <template>
-  <div class="space-y-4">
-    <section class="flex flex-wrap items-center justify-between gap-3">
+  <div class="space-y-6 py-5">
+    <!-- Header -->
+    <section class="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 class="text-xl font-semibold">{{ t('dashboard.title') }}</h1>
-        <p class="text-sm text-muted">
-          {{ t('dashboard.description') }}
-        </p>
+        <h1 class="text-lg font-semibold">{{ t('dashboard.title') }}</h1>
+        <p class="mt-0.5 text-sm text-muted">{{ t('dashboard.description') }}</p>
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex gap-1">
         <UButton
           v-for="range in ranges"
           :key="range.key"
           size="xs"
           :variant="activeRange.key === range.key ? 'solid' : 'ghost'"
           color="neutral"
-          class="rounded-full"
           @click="setRange(range)"
         >
           {{ range.label }}
@@ -22,67 +20,50 @@
       </div>
     </section>
 
-    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          {{ t('dashboard.metrics.activeInput') }}
-        </div>
-        <div class="text-2xl font-semibold mt-2">
+    <!-- Metric cards -->
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div class="rounded-xl border border-(--ui-border) p-4">
+        <div class="text-xs text-muted">{{ t('dashboard.metrics.activeInput') }}</div>
+        <div class="mt-1.5 text-2xl font-semibold tabular-nums">
           {{ formatDuration(totalSeconds) }}
         </div>
-        <div class="text-xs text-muted mt-1">
-          {{ activeRange.caption }}
-        </div>
+        <div class="mt-1.5 text-xs text-muted">{{ activeRange.caption }}</div>
       </div>
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          {{ t('dashboard.metrics.foregroundTime') }}
-        </div>
-        <div class="text-2xl font-semibold mt-2">
+      <div class="rounded-xl border border-(--ui-border) p-4">
+        <div class="text-xs text-muted">{{ t('dashboard.metrics.foregroundTime') }}</div>
+        <div class="mt-1.5 text-2xl font-semibold tabular-nums text-emerald-500">
           {{ formatDuration(totalForegroundSeconds) }}
         </div>
-        <div class="text-xs text-muted mt-1">
-          {{ t('dashboard.metrics.foregroundHint') }}
-        </div>
+        <div class="mt-1.5 text-xs text-muted">{{ t('dashboard.metrics.foregroundHint') }}</div>
       </div>
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          {{ t('dashboard.metrics.appsSeen') }}
-        </div>
-        <div class="text-2xl font-semibold mt-2">
+      <div class="rounded-xl border border-(--ui-border) p-4">
+        <div class="text-xs text-muted">{{ t('dashboard.metrics.appsSeen') }}</div>
+        <div class="mt-1.5 text-2xl font-semibold tabular-nums">
           {{ uniquePrograms }}
         </div>
-        <div class="text-xs text-muted mt-1">
-          {{ t('dashboard.metrics.appsSeenHint') }}
-        </div>
+        <div class="mt-1.5 text-xs text-muted">{{ t('dashboard.metrics.appsSeenHint') }}</div>
       </div>
     </section>
 
-    <section class="grid gap-3 lg:grid-cols-[1.1fr_1.9fr]">
-      <div class="panel">
+    <!-- Focus split + Top apps -->
+    <section class="grid gap-4 lg:grid-cols-[1fr_2fr]">
+      <!-- Focus presence -->
+      <div class="rounded-xl border border-(--ui-border) p-4">
         <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-semibold">{{ t('dashboard.focusSplit.title') }}</h2>
-            <p class="text-xs text-muted">
-              {{ t('dashboard.focusSplit.description') }}
-            </p>
-          </div>
-          <UBadge color="neutral" variant="soft">
-            {{ formatDuration(totalTrackedSeconds) }}
-          </UBadge>
+          <h2 class="text-sm font-semibold">{{ t('dashboard.focusSplit.title') }}</h2>
+          <span class="text-xs text-muted tabular-nums">{{ formatDuration(totalTrackedSeconds) }}</span>
         </div>
-        <div class="mt-4 space-y-3">
+        <p class="mt-0.5 text-xs text-muted">{{ t('dashboard.focusSplit.description') }}</p>
+        <div class="mt-4 space-y-2.5">
           <div class="flex items-center justify-between text-sm">
             <span class="font-medium">{{ t('common.foreground') }}</span>
-            <span class="text-muted">
-              {{ formatDuration(totalForegroundSeconds) }}
-            </span>
+            <span class="text-muted tabular-nums">{{ formatDuration(totalForegroundSeconds) }}</span>
           </div>
           <UProgress
             :model-value="foregroundPercent"
             :max="100"
-            color="neutral"
-            size="2xs"
+            color="success"
+            size="xs"
           />
           <div class="text-xs text-muted">
             {{ t('dashboard.focusSplit.activeInputLogged', { duration: formatDuration(totalSeconds) }) }}
@@ -90,89 +71,74 @@
         </div>
       </div>
 
-      <div class="panel">
+      <!-- Top apps -->
+      <div class="rounded-xl border border-(--ui-border) p-4">
         <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-semibold">{{ t('dashboard.topApps.title') }}</h2>
-            <p class="text-xs text-muted">
-              {{ t('dashboard.topApps.description') }}
-            </p>
-          </div>
-          <UBadge color="neutral" variant="soft">
-            {{ t('common.top', { count: topPrograms.length }) }}
-          </UBadge>
+          <h2 class="text-sm font-semibold">{{ t('dashboard.topApps.title') }}</h2>
+          <span class="text-xs text-muted tabular-nums">{{ t('common.top', { count: topPrograms.length }) }}</span>
         </div>
+        <p class="mt-0.5 text-xs text-muted">{{ t('dashboard.topApps.description') }}</p>
         <div v-if="topPrograms.length" class="mt-4 space-y-3">
-          <div v-for="item in topPrograms" :key="item.name" class="space-y-1">
+          <div v-for="item in topPrograms" :key="item.name" class="space-y-1.5">
             <div class="flex items-center justify-between text-sm">
               <span class="font-medium">{{ item.name }}</span>
-              <span class="text-muted">
-                {{ formatDuration(item.seconds) }}
-              </span>
+              <span class="text-muted tabular-nums">{{ formatDuration(item.seconds) }}</span>
             </div>
             <UProgress
               :model-value="item.percent"
               :max="100"
               color="neutral"
-              size="2xs"
+              size="xs"
             />
           </div>
         </div>
-        <div
-          v-else
-          class="mt-5 flex flex-col items-center gap-2 text-sm text-muted"
-        >
-          <UIcon name="i-lucide-moon-star" class="h-6 w-6" />
+        <div v-else class="mt-6 flex flex-col items-center gap-2 py-4 text-sm text-muted">
+          <UIcon name="i-lucide-moon-star" class="h-6 w-6 opacity-40" />
           {{ t('dashboard.topApps.empty') }}
         </div>
       </div>
     </section>
 
-    <section class="panel">
-      <div class="flex items-center justify-between">
+    <!-- Activity log -->
+    <section class="rounded-xl border border-(--ui-border)">
+      <div class="flex items-center justify-between p-4 pb-0">
         <div>
-          <h2 class="text-lg font-semibold">{{ t('dashboard.activityLog.title') }}</h2>
-          <p class="text-xs text-muted">
-            {{ t('dashboard.activityLog.description') }}
-          </p>
+          <h2 class="text-sm font-semibold">{{ t('dashboard.activityLog.title') }}</h2>
+          <p class="mt-0.5 text-xs text-muted">{{ t('dashboard.activityLog.description') }}</p>
         </div>
-        <UBadge color="neutral" variant="soft">{{ recentRecords.length }}</UBadge>
+        <UBadge color="neutral" variant="subtle" size="xs">{{ recentRecords.length }}</UBadge>
       </div>
-      <div v-if="recentRecords.length" class="mt-3 space-y-2">
+      <div v-if="recentRecords.length" class="mt-3 divide-y divide-(--ui-border)">
         <div
           v-for="(record, index) in recentRecords"
           :key="record.id ?? `${record.timestamp}-${index}`"
-          class="rounded-lg bg-muted px-3 py-2 text-xs"
+          class="flex items-center gap-4 px-4 py-2.5 text-xs transition-colors hover:bg-(--ui-bg-elevated)"
         >
-          <div class="flex items-center justify-between">
-            <span class="font-semibold">{{ record.program || t('common.unknown') }}</span>
-            <span class="text-muted">
-              {{ formatDuration(record.seconds) }}
-            </span>
-          </div>
-          <div class="mt-1 flex items-center justify-between text-[11px] text-muted">
-            <span>{{ formatTimestamp(record.timestamp) }}</span>
-            <span
-              v-if="record.event"
-              class="rounded-full bg-muted/70 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-muted-foreground"
-            >
-              {{ record.event }}
-            </span>
-          </div>
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/60" />
+          <span class="min-w-0 flex-1 truncate font-medium">{{ record.program || t('common.unknown') }}</span>
+          <span class="shrink-0 tabular-nums text-muted">{{ formatDuration(record.seconds) }}</span>
+          <span class="shrink-0 tabular-nums text-muted opacity-60">{{ formatTimestamp(record.timestamp) }}</span>
+          <UBadge
+            v-if="record.event"
+            color="neutral"
+            variant="subtle"
+            size="xs"
+          >
+            {{ record.event }}
+          </UBadge>
         </div>
       </div>
-      <div
-        v-else
-        class="mt-5 flex flex-col items-center gap-2 text-sm text-muted"
-      >
-        <UIcon name="i-lucide-sparkles" class="h-6 w-6" />
+      <div v-else class="flex flex-col items-center gap-2 px-4 py-8 text-sm text-muted">
+        <UIcon name="i-lucide-sparkles" class="h-6 w-6 opacity-40" />
         {{ t('dashboard.activityLog.empty') }}
       </div>
     </section>
 
-    <section v-if="isSyncing" class="text-sm text-muted">
+    <!-- Syncing -->
+    <div v-if="isSyncing" class="flex items-center gap-2 text-xs text-muted">
+      <UIcon name="i-lucide-loader" class="h-3.5 w-3.5 animate-spin" />
       {{ t('dashboard.syncing') }}
-    </section>
+    </div>
   </div>
 </template>
 

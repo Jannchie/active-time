@@ -1,20 +1,18 @@
 <template>
-  <div class="space-y-4">
-    <section class="flex flex-wrap items-center justify-between gap-3">
+  <div class="space-y-6 py-5">
+    <!-- Header -->
+    <section class="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 class="text-xl font-semibold">{{ t('processes.title') }}</h1>
-        <p class="text-sm text-muted">
-          {{ t('processes.description') }}
-        </p>
+        <h1 class="text-lg font-semibold">{{ t('processes.title') }}</h1>
+        <p class="mt-0.5 text-sm text-muted">{{ t('processes.description') }}</p>
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex gap-1">
         <UButton
           v-for="range in ranges"
           :key="range.key"
           size="xs"
           :variant="activeRange.key === range.key ? 'solid' : 'ghost'"
           color="neutral"
-          class="rounded-full"
           @click="setRange(range)"
         >
           {{ range.label }}
@@ -22,112 +20,108 @@
       </div>
     </section>
 
-    <section class="grid gap-3 md:grid-cols-2">
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          {{ t('processes.metrics.foregroundTime') }}
-        </div>
-        <div class="text-2xl font-semibold mt-2">
+    <!-- Metric cards -->
+    <section class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-xl border border-(--ui-border) p-4">
+        <div class="text-xs text-muted">{{ t('processes.metrics.foregroundTime') }}</div>
+        <div class="mt-1.5 text-2xl font-semibold tabular-nums text-emerald-500">
           {{ formatDuration(totalForegroundSeconds) }}
         </div>
-        <div class="text-xs text-muted mt-1">
-          {{ t('processes.metrics.foregroundHint') }}
-        </div>
+        <div class="mt-1.5 text-xs text-muted">{{ t('processes.metrics.foregroundHint') }}</div>
       </div>
-      <div class="panel">
-        <div class="text-xs uppercase tracking-[0.2em] text-muted">
-          {{ t('processes.metrics.trackedApps') }}
-        </div>
-        <div class="text-2xl font-semibold mt-2">
+      <div class="rounded-xl border border-(--ui-border) p-4">
+        <div class="text-xs text-muted">{{ t('processes.metrics.trackedApps') }}</div>
+        <div class="mt-1.5 text-2xl font-semibold tabular-nums">
           {{ uniquePrograms }}
         </div>
-        <div class="text-xs text-muted mt-1">
-          {{ t('processes.metrics.trackedAppsHint') }}
-        </div>
+        <div class="mt-1.5 text-xs text-muted">{{ t('processes.metrics.trackedAppsHint') }}</div>
       </div>
     </section>
 
-    <section class="panel">
-      <div class="flex flex-wrap items-center justify-between gap-3">
+    <!-- Process table -->
+    <section class="rounded-xl border border-(--ui-border)">
+      <div class="flex flex-wrap items-center justify-between gap-3 p-4 pb-0">
         <div>
-          <h2 class="text-lg font-semibold">{{ t('processes.detail.title') }}</h2>
-          <p class="text-xs text-muted">
-            {{ t('processes.detail.description') }}
-          </p>
+          <h2 class="text-sm font-semibold">{{ t('processes.detail.title') }}</h2>
+          <p class="mt-0.5 text-xs text-muted">{{ t('processes.detail.description') }}</p>
         </div>
-        <UBadge color="neutral" variant="soft">{{ processRows.length }}</UBadge>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-muted">{{ t('processes.sortedBy', { sort: sortLabel }) }}</span>
+          <UBadge color="neutral" variant="subtle" size="xs">{{ processRows.length }}</UBadge>
+        </div>
       </div>
-      <div class="mt-2 text-xs text-muted">
-        {{ t('processes.sortedBy', { sort: sortLabel }) }}
-      </div>
-      <div v-if="processRows.length" class="mt-4 space-y-2">
-        <div
-          class="grid grid-cols-[minmax(0,1fr)_84px_120px] items-center gap-4 text-[11px] uppercase tracking-[0.2em] text-muted"
-        >
+
+      <div v-if="processRows.length" class="mt-3">
+        <!-- Table header -->
+        <div class="grid grid-cols-[minmax(0,1fr)_90px_130px] items-center gap-4 border-b border-(--ui-border) px-4 py-2 text-[11px] uppercase tracking-wider text-muted">
           <span>{{ t('processes.table.process') }}</span>
           <span class="text-right">{{ t('processes.table.foreground') }}</span>
           <span class="text-right">{{ t('processes.table.lastSeen') }}</span>
         </div>
-        <div
-          v-for="row in processRows"
-          :key="row.name"
-          class="space-y-2 rounded-lg bg-muted px-3 py-2 text-xs"
-        >
+
+        <!-- Table rows -->
+        <div class="divide-y divide-(--ui-border)">
           <div
-            class="grid grid-cols-[minmax(0,1fr)_84px_120px] items-center gap-4"
+            v-for="row in processRows"
+            :key="row.name"
+            class="space-y-2 px-4 py-2.5 transition-colors hover:bg-(--ui-bg-elevated)"
           >
-            <div class="flex min-w-0 items-center gap-2">
-              <button
-                type="button"
-                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-transparent text-muted transition hover:border-muted/60 hover:text-foreground"
-                :class="isMarked(row.name) ? 'text-amber-400' : ''"
-                :title="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
-                :aria-label="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
-                :aria-pressed="isMarked(row.name)"
-                @click="toggleMarked(row.name)"
-              >
-                <UIcon name="i-lucide-star" class="h-3.5 w-3.5" />
-              </button>
-              <div
-                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted/70"
-              >
-                <img
-                  v-if="iconMap[row.name]"
-                  :src="iconMap[row.name]"
-                  alt=""
-                  class="h-4 w-4"
+            <div class="grid grid-cols-[minmax(0,1fr)_90px_130px] items-center gap-4">
+              <div class="flex min-w-0 items-center gap-2">
+                <button
+                  type="button"
+                  class="flex h-6 w-6 shrink-0 items-center justify-center transition-colors"
+                  :class="isMarked(row.name) ? 'text-emerald-500' : 'text-muted opacity-30 hover:opacity-70'"
+                  :title="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
+                  :aria-label="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
+                  :aria-pressed="isMarked(row.name)"
+                  @click="toggleMarked(row.name)"
                 >
-                <div
-                  v-else
-                  class="h-4 w-4 rounded bg-muted-foreground/30"
-                />
+                  <UIcon name="i-lucide-star" class="h-3.5 w-3.5" />
+                </button>
+                <div class="flex h-6 w-6 shrink-0 items-center justify-center">
+                  <img
+                    v-if="iconMap[row.name]"
+                    :src="iconMap[row.name]"
+                    alt=""
+                    class="h-4 w-4"
+                  >
+                  <div
+                    v-else
+                    class="h-4 w-4 rounded bg-muted-foreground/20"
+                  />
+                </div>
+                <div class="truncate text-xs font-medium">{{ row.name }}</div>
               </div>
-              <div class="truncate font-medium">{{ row.name }}</div>
+              <div class="text-right text-xs text-muted tabular-nums">
+                {{ formatDuration(row.foreground) }}
+              </div>
+              <div class="text-right text-xs text-muted tabular-nums opacity-60">
+                {{ row.lastSeen ? formatTimestamp(row.lastSeen) : '--' }}
+              </div>
             </div>
-            <div class="text-right text-muted tabular-nums">
-              {{ formatDuration(row.foreground) }}
-            </div>
-            <div class="text-right text-muted tabular-nums">
-              {{ row.lastSeen ? formatTimestamp(row.lastSeen) : '--' }}
-            </div>
+            <UProgress
+              class="w-full"
+              :model-value="row.progressValue"
+              :max="100"
+              color="neutral"
+              size="xs"
+            />
           </div>
-          <UProgress
-            class="w-full"
-            :model-value="row.progressValue"
-            :max="100"
-            color="neutral"
-            size="2xs"
-          />
         </div>
       </div>
-      <div v-else class="mt-4 text-xs text-muted">
+
+      <div v-else class="flex flex-col items-center gap-2 px-4 py-8 text-sm text-muted">
+        <UIcon v-if="loading" name="i-lucide-loader" class="h-5 w-5 animate-spin opacity-40" />
         {{ loading ? t('processes.loading') : t('processes.empty') }}
       </div>
     </section>
 
-    <section v-if="loading" class="text-sm text-muted">
+    <!-- Syncing -->
+    <div v-if="loading" class="flex items-center gap-2 text-xs text-muted">
+      <UIcon name="i-lucide-loader" class="h-3.5 w-3.5 animate-spin" />
       {{ t('processes.syncing') }}
-    </section>
+    </div>
   </div>
 </template>
 

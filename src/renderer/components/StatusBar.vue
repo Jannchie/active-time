@@ -1,40 +1,25 @@
 <template>
-  <footer
-    class="status-bar flex flex-wrap items-center justify-between gap-3 px-3 py-2"
-  >
-    <div class="flex items-center gap-3">
-      <UButton
-        color="neutral"
-        :variant="recording ? 'solid' : 'soft'"
-        size="xs"
-        class="rounded-full"
-        @click="toggleRecording"
-      >
-        {{ recording ? t('status.recording') : t('status.paused') }}
-      </UButton>
-      <UBadge color="neutral" variant="soft">
-        {{ t('status.storage', { size: formatBytes(storageSize) }) }}
-      </UBadge>
+  <footer class="status-bar flex items-center gap-3 px-3 py-1.5">
+    <UBadge
+      :color="recording ? 'success' : 'neutral'"
+      :variant="recording ? 'subtle' : 'soft'"
+      size="xs"
+      class="cursor-pointer select-none"
+      @click="toggleRecording"
+    >
+      {{ recording ? t('status.recording') : t('status.paused') }}
+    </UBadge>
+    <span class="text-xs text-muted tabular-nums">
+      {{ t('status.storage', { size: formatBytes(storageSize) }) }}
+    </span>
+    <div class="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted">
+      <UIcon name="i-lucide-activity" class="h-3.5 w-3.5 shrink-0" />
+      <span class="truncate">{{ t('status.active', { label: activeLabel }) }}</span>
+      <span class="shrink-0 tabular-nums opacity-60">{{ activeTimeLabel }}</span>
     </div>
-    <div class="flex min-w-0 flex-1 items-center gap-2 text-xs text-muted">
-      <UIcon name="i-lucide-activity" class="h-4 w-4" />
-      <div class="min-w-0">
-        <div class="truncate">
-          {{ t('status.active', { label: activeLabel }) }}
-        </div>
-        <div class="truncate text-[11px]">
-          {{ activeTimeLabel }}
-        </div>
-      </div>
-    </div>
-    <div class="flex items-center gap-3 text-xs text-muted">
-      <span>
-        {{ t('status.sample', { seconds: checkInterval, unit: t('common.secondsShort') }) }}
-      </span>
-      <span class="hidden sm:inline">
-        {{ t('status.privacy') }}
-      </span>
-    </div>
+    <span class="shrink-0 text-xs tabular-nums text-muted">
+      {{ t('status.sample', { seconds: checkInterval, unit: t('common.secondsShort') }) }}
+    </span>
   </footer>
 </template>
 

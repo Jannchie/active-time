@@ -6,7 +6,7 @@
     >
       {{ t('sidebar.activeApp') }}
     </div>
-    <div v-if="collapsed" class="flex items-center gap-2 text-xs">
+    <div v-if="collapsed" class="flex items-center justify-center">
       <UIcon name="i-lucide-activity" class="h-4 w-4 text-muted" />
     </div>
     <div v-else class="space-y-2 text-xs">
@@ -16,29 +16,23 @@
       <div v-else-if="!items.length" class="text-muted">
         {{ emptyMessage }}
       </div>
-      <div v-else class="space-y-2">
+      <div v-else class="space-y-2.5">
         <div
           v-for="item in items"
           :key="item.program"
           class="flex items-center gap-2"
         >
-          <div class="h-2 w-2 rounded-full bg-current" />
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
           <div class="min-w-0 flex-1">
             <div class="truncate font-medium">
               {{ item.program }}
             </div>
-            <div class="truncate text-[11px] text-muted">
+            <div class="truncate text-[11px] text-muted tabular-nums">
               {{ timeLabel(item.seconds) }}
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div
-      v-if="!collapsed"
-      class="text-[9px] uppercase tracking-[0.3em] text-muted"
-    >
-      v0.3
     </div>
   </div>
 </template>

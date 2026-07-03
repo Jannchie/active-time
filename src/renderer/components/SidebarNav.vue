@@ -6,12 +6,16 @@
       class="no-drag gap-2"
       :class="collapsed ? 'h-9 w-9 justify-center' : 'h-9 w-full justify-start'"
       size="sm"
-      :variant="modelValue === item.key ? 'solid' : 'ghost'"
+      :variant="modelValue === item.key ? 'soft' : 'ghost'"
       color="neutral"
       :square="collapsed"
       @click="emit('update:modelValue', item.key)"
     >
-      <UIcon :name="item.icon" class="h-4 w-4" />
+      <UIcon
+        :name="item.icon"
+        class="h-4 w-4"
+        :class="modelValue === item.key ? 'text-emerald-500' : 'text-muted'"
+      />
       <span v-if="!collapsed" class="text-sm">{{ item.label }}</span>
     </UButton>
   </nav>

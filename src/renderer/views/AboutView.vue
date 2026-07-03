@@ -1,27 +1,23 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-6 py-5">
+    <!-- Header -->
     <section>
-      <h1 class="text-xl font-semibold">{{ t('about.title') }}</h1>
-      <p class="text-sm text-muted">
-        {{ t('about.description') }}
-      </p>
+      <h1 class="text-lg font-semibold">{{ t('about.title') }}</h1>
+      <p class="mt-0.5 text-sm text-muted">{{ t('about.description') }}</p>
     </section>
 
-    <section class="panel">
-      <div class="flex flex-col items-start gap-6 md:flex-row md:items-center">
-        <div
-          class="flex h-16 w-16 items-center justify-center rounded-2xl border bg-muted"
-        >
-          <LogoMark class="h-10 w-10" />
+    <!-- Identity card -->
+    <section class="rounded-xl border border-(--ui-border) p-5">
+      <div class="flex flex-col items-start gap-5 md:flex-row md:items-center">
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-(--ui-border) text-emerald-500">
+          <LogoMark class="h-8 w-8" />
         </div>
-        <div class="space-y-1">
-          <div class="text-xs uppercase tracking-[0.3em] text-muted">
+        <div class="min-w-0 space-y-1">
+          <UBadge color="neutral" variant="subtle" size="xs">
             {{ t('common.version', { version: packageInfo.version }) }}
-          </div>
+          </UBadge>
           <div class="text-xl font-semibold">{{ t('app.name') }}</div>
-          <div class="text-sm text-muted">
-            {{ t('about.madeBy') }}
-          </div>
+          <div class="text-sm text-muted">{{ t('about.madeBy') }}</div>
         </div>
         <div class="flex-1" />
         <UButton
@@ -29,6 +25,7 @@
           target="_blank"
           color="neutral"
           variant="outline"
+          size="sm"
         >
           <UIcon name="i-lucide-github" class="h-4 w-4" />
           {{ t('about.github') }}
@@ -36,26 +33,30 @@
       </div>
     </section>
 
-    <section class="panel">
-      <h2 class="text-lg font-semibold">{{ t('about.tracks.title') }}</h2>
-      <div class="mt-3 grid gap-3 md:grid-cols-3">
-        <div class="rounded-lg bg-muted px-3 py-2">
-          <div class="text-sm font-semibold">{{ t('about.tracks.apps.title') }}</div>
-          <div class="text-xs text-muted">
-            {{ t('about.tracks.apps.description') }}
+    <!-- What it tracks -->
+    <section>
+      <h2 class="text-sm font-semibold">{{ t('about.tracks.title') }}</h2>
+      <div class="mt-3 grid gap-4 md:grid-cols-3">
+        <div class="rounded-xl border border-(--ui-border) p-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-app-window" class="h-4 w-4 text-emerald-500" />
+            <span class="text-sm font-semibold">{{ t('about.tracks.apps.title') }}</span>
           </div>
+          <p class="mt-2 text-xs text-muted leading-relaxed">{{ t('about.tracks.apps.description') }}</p>
         </div>
-        <div class="rounded-lg bg-muted px-3 py-2">
-          <div class="text-sm font-semibold">{{ t('about.tracks.presence.title') }}</div>
-          <div class="text-xs text-muted">
-            {{ t('about.tracks.presence.description') }}
+        <div class="rounded-xl border border-(--ui-border) p-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-eye" class="h-4 w-4 text-emerald-500" />
+            <span class="text-sm font-semibold">{{ t('about.tracks.presence.title') }}</span>
           </div>
+          <p class="mt-2 text-xs text-muted leading-relaxed">{{ t('about.tracks.presence.description') }}</p>
         </div>
-        <div class="rounded-lg bg-muted px-3 py-2">
-          <div class="text-sm font-semibold">{{ t('about.tracks.activity.title') }}</div>
-          <div class="text-xs text-muted">
-            {{ t('about.tracks.activity.description') }}
+        <div class="rounded-xl border border-(--ui-border) p-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-mouse-pointer-click" class="h-4 w-4 text-emerald-500" />
+            <span class="text-sm font-semibold">{{ t('about.tracks.activity.title') }}</span>
           </div>
+          <p class="mt-2 text-xs text-muted leading-relaxed">{{ t('about.tracks.activity.description') }}</p>
         </div>
       </div>
     </section>

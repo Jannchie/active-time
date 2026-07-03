@@ -10,8 +10,8 @@
   },
   "sidebar": {
     "activeApp": "当前应用",
-    "markedEmpty": "???????????",
-    "markedInactive": "??????????"
+    "markedEmpty": "标记应用后将在此处显示。",
+    "markedInactive": "没有标记的应用在运行。"
   },
   "status": {
     "recording": "记录中",
@@ -24,8 +24,8 @@
     "noActiveApp": "暂无活动应用",
     "started": "开始于 {time}",
     "startedUnknown": "开始于 --",
-    "running": "?? {duration}",
-    "runningUnknown": "?? --"
+    "running": "运行 {duration}",
+    "runningUnknown": "运行 --"
   },
   "common": {
     "apply": "应用",
@@ -107,8 +107,8 @@
       "title": "应用详情",
       "description": "每个应用的前台时间与最近出现。"
     },
-    "mark": "??",
-    "unmark": "????",
+    "mark": "标记",
+    "unmark": "取消标记",
     "sortedBy": "排序依据：{sort}",
     "table": {
       "process": "应用",

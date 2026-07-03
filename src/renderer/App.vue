@@ -1,28 +1,27 @@
 <template>
   <UApp>
-    <UDashboardGroup unit="rem">
+    <UDashboardGroup unit="rem" storage="local" storage-key="dashboard" :persistent="true">
       <UDashboardSidebar
+        id="sidebar"
         class="app-sidebar"
+        side="left"
         :collapsible="true"
         :resizable="false"
         :min-size="14"
+        :max-size="20"
         :default-size="16"
         :collapsed-size="5"
       >
         <template #header="{ collapsed }">
-          <div class="flex w-full items-center justify-between gap-2 py-2">
-            <div class="flex items-center gap-2">
-              <div
-                class="flex h-9 w-9 items-center justify-center rounded-md bg-muted/70 text-muted"
-              >
-                <UIcon name="i-lucide-timer" class="h-5 w-5" />
-              </div>
-              <div
-                v-if="!collapsed"
-                class="text-[10px] uppercase tracking-[0.3em] text-muted"
-              >
-                {{ t('app.name') }}
-              </div>
+          <div class="flex w-full items-center gap-2 py-2">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center text-emerald-500">
+              <UIcon name="i-lucide-timer" class="h-5 w-5" />
+            </div>
+            <div
+              v-if="!collapsed"
+              class="text-[10px] font-bold uppercase tracking-[0.3em] text-muted"
+            >
+              {{ t('app.name') }}
             </div>
           </div>
         </template>
@@ -34,7 +33,7 @@
         </template>
       </UDashboardSidebar>
 
-      <UDashboardPanel>
+      <UDashboardPanel id="main" :min-size="50" :max-size="100" :default-size="84" :resizable="false">
         <template #header>
           <TitleBar />
         </template>

@@ -17,6 +17,28 @@ export default defineConfig({
         colors: {
           neutral: 'zinc',
         },
+        button: {
+          slots: {
+            base: 'rounded-lg font-medium inline-flex items-center disabled:cursor-not-allowed aria-disabled:cursor-not-allowed disabled:opacity-75 aria-disabled:opacity-75 transition-colors',
+          },
+        },
+        badge: {
+          slots: {
+            base: 'rounded-lg font-medium inline-flex items-center',
+          },
+        },
+        modal: {
+          slots: {
+            content:
+              'bg-default divide-y divide-default flex flex-col focus:outline-none rounded-xl shadow-lg border border-default',
+          },
+        },
+        progress: {
+          slots: {
+            root: 'rounded-full',
+            indicator: 'rounded-full',
+          },
+        },
         select: {
           defaultVariants: {
             variant: 'soft',

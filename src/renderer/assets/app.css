@@ -63,12 +63,6 @@ body {
   min-height: 100vh;
 }
 
-.panel {
-  background: var(--ui-bg-elevated);
-  border-radius: 12px;
-  padding: 16px;
-}
-
 .app-sidebar {
   min-width: 220px;
 }
@@ -91,10 +85,9 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--ui-border);
-  border-radius: 999px;
 }
