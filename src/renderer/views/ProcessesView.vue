@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-3">
     <!-- Toolbar -->
     <section class="flex flex-wrap items-center justify-between gap-2">
-      <h1 class="text-[13px] font-bold tracking-wide">{{ t('processes.title') }}</h1>
+      <h1 class="text-sm font-bold tracking-wide">{{ t('processes.title') }}</h1>
       <div class="flex items-center gap-2">
         <UIcon
           v-if="loading"
@@ -31,14 +31,14 @@
         <div class="mt-2 text-2xl font-bold leading-none tabular-nums text-emerald-500">
           {{ formatDuration(totalForegroundSeconds) }}
         </div>
-        <div class="mt-2 text-[11px] text-muted">{{ t('processes.metrics.foregroundHint') }}</div>
+        <div class="mt-2 text-xs text-muted">{{ t('processes.metrics.foregroundHint') }}</div>
       </div>
       <div class="panel p-3">
         <div class="micro-label">{{ t('processes.metrics.trackedApps') }}</div>
         <div class="mt-2 text-2xl font-bold leading-none tabular-nums">
           {{ uniquePrograms }}
         </div>
-        <div class="mt-2 text-[11px] text-muted">{{ t('processes.metrics.trackedAppsHint') }}</div>
+        <div class="mt-2 text-xs text-muted">{{ t('processes.metrics.trackedAppsHint') }}</div>
       </div>
     </section>
 
@@ -46,7 +46,7 @@
     <section class="panel">
       <header class="panel-header">
         <span class="micro-label">{{ t('processes.detail.title') }}</span>
-        <div class="flex items-center gap-2 text-[11px] text-muted">
+        <div class="flex items-center gap-2 text-xs text-muted">
           <span>{{ t('processes.sortedBy', { sort: sortLabel }) }}</span>
           <span class="tabular-nums">{{ processRows.length }}</span>
         </div>
@@ -54,7 +54,7 @@
 
       <div v-if="processRows.length">
         <!-- Table header -->
-        <div class="grid grid-cols-[minmax(0,1fr)_100px_130px] items-center gap-3 border-b border-(--ui-border) px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted">
+        <div class="micro-label grid grid-cols-[minmax(0,1fr)_100px_130px] items-center gap-3 border-b border-(--ui-border) px-3 py-1.5">
           <span>{{ t('processes.table.process') }}</span>
           <span class="text-right">{{ t('processes.table.foreground') }}</span>
           <span class="text-right">{{ t('processes.table.lastSeen') }}</span>
@@ -65,7 +65,7 @@
           <div
             v-for="row in processRows"
             :key="row.name"
-            class="relative transition-colors hover:bg-(--ui-bg-elevated)/60"
+            class="relative hover:bg-(--ui-bg-elevated)/60"
           >
             <div
               class="absolute inset-y-0 left-0 bg-emerald-500/10"
@@ -75,7 +75,7 @@
               <div class="flex min-w-0 items-center gap-1.5">
                 <button
                   type="button"
-                  class="flex h-5 w-5 shrink-0 items-center justify-center transition-colors"
+                  class="flex h-5 w-5 shrink-0 items-center justify-center"
                   :class="isMarked(row.name) ? 'text-emerald-500' : 'text-muted opacity-30 hover:opacity-70'"
                   :title="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
                   :aria-label="isMarked(row.name) ? t('processes.unmark') : t('processes.mark')"
@@ -98,10 +98,10 @@
                 </div>
                 <div class="selectable truncate text-xs font-medium">{{ row.name }}</div>
               </div>
-              <div class="text-right text-[11px] tabular-nums">
+              <div class="text-right text-xs tabular-nums">
                 {{ formatDuration(row.foreground) }}
               </div>
-              <div class="text-right text-[11px] tabular-nums text-muted">
+              <div class="text-right text-xs tabular-nums text-muted">
                 {{ row.lastSeen ? formatTimestamp(row.lastSeen) : '--' }}
               </div>
             </div>

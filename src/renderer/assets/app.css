@@ -1,13 +1,29 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+/*
+ * Type scale (predefined, no arbitrary px classes in components):
+ *   text-xs  12px — captions, table meta, status bar
+ *   text-sm  13px — body, table cells, nav
+ *   text-base 14px — emphasized body
+ *   text-2xl — metric values
+ * 12px is the minimum size anywhere in the app.
+ */
+@theme {
+  --text-xs: 12px;
+  --text-xs--line-height: 1.4;
+  --text-sm: 13px;
+  --text-sm--line-height: 1.5;
+  --text-base: 14px;
+  --text-base--line-height: 1.5;
+}
+
 @font-face {
   font-family: 'Berkeley Mono';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('https://cdn.jannchie.com/fonts/BerkeleyMono-Regular.woff2')
-    format('woff2');
+  src: url('./fonts/BerkeleyMono-Regular.woff2') format('woff2');
 }
 
 @font-face {
@@ -15,44 +31,35 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('https://cdn.jannchie.com/fonts/BerkeleyMono-Bold.woff2')
-    format('woff2');
+  src: url('./fonts/BerkeleyMono-Bold.woff2') format('woff2');
 }
 
 :root {
-  --font-display-latin:
-    'Berkeley Mono', 'Space Grotesk', 'Inter', system-ui, -apple-system,
-    'Segoe UI', sans-serif;
-  --font-display-zh:
-    'Berkeley Mono', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
-    'Heiti SC', sans-serif;
-  --font-display-ja:
-    'Berkeley Mono', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
-  --font-title-latin:
-    'Berkeley Mono', 'Space Grotesk', 'Inter', system-ui, -apple-system,
-    'Segoe UI', sans-serif;
-  --font-title-zh:
-    'Berkeley Mono', 'Noto Serif SC', 'Songti SC', 'Noto Serif', serif;
-  --font-title-ja:
-    'Berkeley Mono', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
-  --font-display: var(--font-display-latin);
-  --font-title: var(--font-title-latin);
+  --font-sans-latin:
+    system-ui, 'Segoe UI Variable Text', 'Segoe UI', -apple-system, sans-serif;
+  --font-sans-zh:
+    system-ui, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', 'Noto Sans SC',
+    sans-serif;
+  --font-sans-ja:
+    system-ui, 'Segoe UI', 'Yu Gothic UI', 'Hiragino Sans', 'Noto Sans JP',
+    sans-serif;
+  --font-display: var(--font-sans-latin);
+  --font-mono:
+    'Berkeley Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --ui-header-height: 40px;
 }
 
 :root:lang(zh) {
-  --font-display: var(--font-display-zh);
-  --font-title: var(--font-title-zh);
+  --font-display: var(--font-sans-zh);
 }
 
 :root:lang(ja) {
-  --font-display: var(--font-display-ja);
-  --font-title: var(--font-title-ja);
+  --font-display: var(--font-sans-ja);
 }
 
 /* Desktop density: everything rem-based scales down with the root size. */
 html {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 html,
@@ -69,6 +76,16 @@ body {
   -webkit-font-smoothing: antialiased;
   user-select: none;
   cursor: default;
+}
+
+/*
+ * No color/background transitions anywhere (theme switching and hover states
+ * snap instantly, like a native app). Opacity/transform animations stay.
+ */
+*,
+*::before,
+*::after {
+  transition-property: opacity, transform !important;
 }
 
 /* Native apps use the arrow cursor on controls, not the hand. */
@@ -95,6 +112,11 @@ img {
 .selectable * {
   user-select: text;
   cursor: text;
+}
+
+/* Numeric data (durations, sizes, timestamps) keeps the monospace face. */
+.tabular-nums {
+  font-family: var(--font-mono);
 }
 
 .drag-region {
@@ -128,9 +150,6 @@ img {
   gap: 6px;
   align-self: stretch;
   padding: 0 8px;
-  transition:
-    background-color 80ms ease,
-    color 80ms ease;
 }
 
 button.status-item:hover {
@@ -173,16 +192,16 @@ button.status-item:hover {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  min-height: 30px;
+  min-height: 32px;
   padding: 0 10px;
   border-bottom: 1px solid var(--ui-border);
   background-color: var(--ui-bg-muted);
 }
 
 .micro-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ui-text-muted);
 }
@@ -200,15 +219,12 @@ button.status-item:hover {
 .segmented-item {
   display: inline-flex;
   align-items: center;
-  height: 20px;
+  height: 22px;
   padding: 0 10px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   color: var(--ui-text-muted);
-  transition:
-    color 80ms ease,
-    background-color 80ms ease;
 }
 
 .segmented-item:hover {
@@ -216,11 +232,13 @@ button.status-item:hover {
 }
 
 .segmented-item[data-active='true'] {
-  background-color: var(--ui-bg);
+  background-color: color-mix(in srgb, var(--ui-text) 14%, transparent);
   color: var(--ui-text-highlighted);
-  box-shadow:
-    0 0 0 1px var(--ui-border),
-    0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+/* Selected sidebar nav item — same selection language as the segmented control. */
+.nav-active {
+  background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 /* ---- View transition --------------------------------------------------- */

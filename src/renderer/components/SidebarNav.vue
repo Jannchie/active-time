@@ -3,20 +3,22 @@
     <UButton
       v-for="item in items"
       :key="item.key"
-      class="no-drag gap-2"
-      :class="collapsed ? 'h-7 w-7 justify-center' : 'h-7 w-full justify-start px-2'"
+      class="no-drag h-7 w-full gap-2"
+      :class="[
+        collapsed ? 'justify-center px-0' : 'justify-start px-2',
+        modelValue === item.key ? 'nav-active' : '',
+      ]"
       size="xs"
-      :variant="modelValue === item.key ? 'soft' : 'ghost'"
+      variant="ghost"
       color="neutral"
-      :square="collapsed"
       @click="emit('update:modelValue', item.key)"
     >
       <UIcon
         :name="item.icon"
-        class="h-3.5 w-3.5"
+        class="h-4 w-4"
         :class="modelValue === item.key ? 'text-emerald-500' : 'text-muted'"
       />
-      <span v-if="!collapsed" class="text-xs">{{ item.label }}</span>
+      <span v-if="!collapsed" class="text-sm">{{ item.label }}</span>
     </UButton>
   </nav>
 </template>

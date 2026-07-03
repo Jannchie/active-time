@@ -1,5 +1,5 @@
 <template>
-  <footer class="status-bar flex h-[26px] items-center px-1 text-[11px]">
+  <footer class="status-bar flex h-7 items-center px-1 text-xs">
     <button type="button" class="status-item" @click="toggleRecording">
       <span
         class="h-1.5 w-1.5 shrink-0 rounded-full"
@@ -13,7 +13,7 @@
     </span>
     <span class="status-sep" />
     <div class="status-item min-w-0 flex-1">
-      <UIcon name="i-lucide-activity" class="h-3 w-3 shrink-0" />
+      <UIcon name="i-lucide-activity" class="h-3.5 w-3.5 shrink-0" />
       <span class="truncate">{{ t('status.active', { label: activeLabel }) }}</span>
       <span class="shrink-0 tabular-nums opacity-60">{{ activeTimeLabel }}</span>
     </div>

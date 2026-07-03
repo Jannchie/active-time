@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-3">
     <!-- Toolbar -->
     <section class="flex items-center justify-between gap-2">
-      <h1 class="text-[13px] font-bold tracking-wide">{{ t('about.title') }}</h1>
+      <h1 class="text-sm font-bold tracking-wide">{{ t('about.title') }}</h1>
     </section>
 
     <!-- Identity card -->
@@ -23,7 +23,7 @@
               {{ t('common.version', { version: packageInfo.version }) }}
             </UBadge>
           </div>
-          <div class="text-[11px] text-muted">{{ t('about.madeBy') }}</div>
+          <div class="text-xs text-muted">{{ t('about.madeBy') }}</div>
         </div>
         <div class="flex-1" />
         <UButton
@@ -50,21 +50,21 @@
             <UIcon name="i-lucide-app-window" class="h-3.5 w-3.5 text-emerald-500" />
             <span class="text-xs font-semibold">{{ t('about.tracks.apps.title') }}</span>
           </div>
-          <p class="mt-1.5 text-[11px] leading-relaxed text-muted">{{ t('about.tracks.apps.description') }}</p>
+          <p class="mt-1.5 text-xs leading-relaxed text-muted">{{ t('about.tracks.apps.description') }}</p>
         </div>
         <div class="p-3">
           <div class="flex items-center gap-2">
             <UIcon name="i-lucide-eye" class="h-3.5 w-3.5 text-emerald-500" />
             <span class="text-xs font-semibold">{{ t('about.tracks.presence.title') }}</span>
           </div>
-          <p class="mt-1.5 text-[11px] leading-relaxed text-muted">{{ t('about.tracks.presence.description') }}</p>
+          <p class="mt-1.5 text-xs leading-relaxed text-muted">{{ t('about.tracks.presence.description') }}</p>
         </div>
         <div class="p-3">
           <div class="flex items-center gap-2">
             <UIcon name="i-lucide-mouse-pointer-click" class="h-3.5 w-3.5 text-emerald-500" />
             <span class="text-xs font-semibold">{{ t('about.tracks.activity.title') }}</span>
           </div>
-          <p class="mt-1.5 text-[11px] leading-relaxed text-muted">{{ t('about.tracks.activity.description') }}</p>
+          <p class="mt-1.5 text-xs leading-relaxed text-muted">{{ t('about.tracks.activity.description') }}</p>
         </div>
       </div>
     </section>

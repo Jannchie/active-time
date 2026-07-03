@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-3">
     <!-- Toolbar -->
     <section class="flex items-center justify-between gap-2">
-      <h1 class="text-[13px] font-bold tracking-wide">{{ t('settings.title') }}</h1>
+      <h1 class="text-sm font-bold tracking-wide">{{ t('settings.title') }}</h1>
     </section>
 
     <!-- Settings sections -->
@@ -11,7 +11,7 @@
       <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
           <h2 class="text-xs font-semibold">{{ t('settings.theme.title') }}</h2>
-          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.theme.description') }}</p>
+          <p class="mt-0.5 text-xs text-muted">{{ t('settings.theme.description') }}</p>
         </div>
         <div class="segmented">
           <button
@@ -46,7 +46,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-xs font-semibold">{{ t('settings.interval.title') }}</h2>
-            <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.interval.description') }}</p>
+            <p class="mt-0.5 text-xs text-muted">{{ t('settings.interval.description') }}</p>
           </div>
           <div class="flex items-center gap-2">
             <input
@@ -55,9 +55,9 @@
               :min="MIN_CHECK_INTERVAL"
               :max="MAX_CHECK_INTERVAL"
               step="1"
-              class="h-6 w-16 rounded-md border border-(--ui-border) bg-(--ui-bg-muted) px-2 text-right text-[11px] tabular-nums focus:border-(--ui-border-accented) focus:outline-none"
+              class="h-6 w-16 rounded-md border border-(--ui-border) bg-(--ui-bg-muted) px-2 text-right text-xs tabular-nums focus:border-(--ui-border-accented) focus:outline-none"
             >
-            <span class="text-[11px] text-muted">{{ t('common.secondsShort') }}</span>
+            <span class="text-xs text-muted">{{ t('common.secondsShort') }}</span>
             <UButton size="xs" color="neutral" variant="solid" @click="applyInterval">
               {{ t('common.apply') }}
             </UButton>
@@ -76,7 +76,7 @@
               {{ preset }}{{ t('common.secondsShort') }}
             </button>
           </div>
-          <span class="text-[10px] text-muted">
+          <span class="text-xs text-muted">
             {{ t('common.range', { min: MIN_CHECK_INTERVAL, max: MAX_CHECK_INTERVAL, unit: t('common.secondsShort') }) }}
           </span>
         </div>
@@ -86,7 +86,7 @@
       <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
           <h2 class="text-xs font-semibold">{{ t('settings.language.title') }}</h2>
-          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.language.description') }}</p>
+          <p class="mt-0.5 text-xs text-muted">{{ t('settings.language.description') }}</p>
         </div>
         <div class="segmented">
           <button
@@ -106,7 +106,7 @@
       <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
           <h2 class="text-xs font-semibold">{{ t('settings.autoStart.title') }}</h2>
-          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.autoStart.description') }}</p>
+          <p class="mt-0.5 text-xs text-muted">{{ t('settings.autoStart.description') }}</p>
         </div>
         <div class="segmented">
           <button
@@ -132,7 +132,7 @@
       <section class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
         <div>
           <h2 class="text-xs font-semibold text-red-500">{{ t('settings.danger.title') }}</h2>
-          <p class="mt-0.5 text-[11px] text-muted">{{ t('settings.danger.description') }}</p>
+          <p class="mt-0.5 text-xs text-muted">{{ t('settings.danger.description') }}</p>
         </div>
         <UButton color="error" variant="outline" size="xs" @click="showModal = true">
           {{ t('settings.danger.action') }}

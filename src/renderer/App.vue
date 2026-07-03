@@ -11,15 +11,15 @@
         :max-size="20"
         :default-size="16"
         :collapsed-size="5"
-        :ui="{ header: 'px-3', body: 'px-3 py-2 gap-3', footer: 'px-3 py-2' }"
+        :ui="{ header: 'drag-region px-3', body: 'px-3 py-2 gap-3', footer: 'px-3 py-2' }"
       >
         <template #header="{ collapsed }">
-          <div class="flex w-full items-center gap-2 py-1.5">
+          <div
+            class="drag-region flex h-full w-full items-center gap-2"
+            :class="collapsed ? 'justify-center' : ''"
+          >
             <div class="flex h-7 w-7 shrink-0 items-center justify-center text-emerald-500">
               <UIcon name="i-lucide-timer" class="h-4 w-4" />
-            </div>
-            <div v-if="!collapsed" class="micro-label tracking-[0.3em]">
-              {{ t('app.name') }}
             </div>
           </div>
         </template>
@@ -33,6 +33,9 @@
 
       <UDashboardPanel
         id="main"
+        :min-size="0"
+        :max-size="100"
+        :default-size="0"
         :resizable="false"
         :ui="{ body: 'gap-0 sm:gap-0 p-3 sm:p-4' }"
       >
@@ -54,7 +57,6 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
 import TitleBar from '@/components/TitleBar.vue';
 import SidebarNav from '@/components/SidebarNav.vue';
 import StatusBar from '@/components/StatusBar.vue';
@@ -71,7 +73,6 @@ const activeView = ref('dashboard');
 const theme = ref<ThemeMode>('system');
 let mediaQuery: MediaQueryList | null = null;
 const electron = useElectron();
-const { t } = useI18n();
 
 const handleMediaChange = () => {
   if (theme.value === 'system') {

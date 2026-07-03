@@ -7,10 +7,10 @@
       <UIcon name="i-lucide-activity" class="h-3.5 w-3.5 text-muted" />
     </div>
     <div v-else class="space-y-1.5 text-xs">
-      <div v-if="!status.available" class="text-[11px] text-muted">
+      <div v-if="!status.available" class="text-xs text-muted">
         {{ t('status.activityUnavailable') }}
       </div>
-      <div v-else-if="!items.length" class="text-[11px] text-muted">
+      <div v-else-if="!items.length" class="text-xs text-muted">
         {{ emptyMessage }}
       </div>
       <div v-else class="space-y-2">
@@ -24,7 +24,7 @@
             <div class="selectable truncate text-xs font-medium">
               {{ item.program }}
             </div>
-            <div class="truncate text-[10px] text-muted tabular-nums">
+            <div class="truncate text-xs text-muted tabular-nums">
               {{ timeLabel(item.seconds) }}
             </div>
           </div>
