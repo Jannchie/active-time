@@ -11,7 +11,15 @@
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import log from 'electron-log';
-import { app, BrowserWindow, Menu, Tray, ipcMain, shell } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  Tray,
+  dialog,
+  ipcMain,
+  shell,
+} from 'electron';
 import os from 'os';
 import fs from 'fs/promises';
 import MenuBuilder from './menu';
@@ -493,6 +501,12 @@ process.on('exit', () => {
   uIOhook?.stop?.();
 });
 
+if (process.platform === 'win32') {
+  // Required for Windows toast notifications (including electron-updater's
+  // "update downloaded" notice) to display and group correctly.
+  app.setAppUserModelId('com.jannchie.ActiveTime');
+}
+
 app.on('before-quit', () => {
   if (iconCacheSaveTimer) {
     clearTimeout(iconCacheSaveTimer);
@@ -539,11 +553,42 @@ const normalizeCheckInterval = (value: unknown) => {
   return Math.min(MAX_CHECK_INTERVAL, Math.max(MIN_CHECK_INTERVAL, numeric));
 };
 
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
+
 export default class AppUpdater {
+  private promptedVersion = '';
+
   constructor() {
     log.transports.file.level = 'info';
     autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.on('update-downloaded', (info) => {
+      void this.promptInstall(info.version);
+    });
+    void autoUpdater.checkForUpdatesAndNotify();
+    // The app lives in the tray and can run for weeks; keep checking.
+    setInterval(() => {
+      void autoUpdater.checkForUpdatesAndNotify();
+    }, UPDATE_CHECK_INTERVAL_MS);
+  }
+
+  private async promptInstall(version: string) {
+    if (this.promptedVersion === version) {
+      return;
+    }
+    this.promptedVersion = version;
+    const { response } = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Active Time',
+      message: `Update ${version} is ready`,
+      detail: 'Restart Active Time to apply the update.',
+      buttons: ['Restart Now', 'Later'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (response === 0) {
+      data.closeable = true;
+      autoUpdater.quitAndInstall();
+    }
   }
 }
 
