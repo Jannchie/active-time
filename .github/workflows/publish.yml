@@ -11,7 +11,9 @@ permissions:
 
 jobs:
   publish:
-    runs-on: windows-latest
+    # windows-latest now maps to the VS2026 image, which node-gyp cannot
+    # detect; windows-2025 still ships VS2022.
+    runs-on: windows-2025
 
     steps:
       - name: Checkout git repo
